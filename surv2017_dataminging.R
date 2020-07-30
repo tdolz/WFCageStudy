@@ -113,13 +113,13 @@ levels(do.gather$variable) <- c("MD","MS","ND","NS","SD","SS") #renaming levels 
 do.gather <-filter(do.gather, value > 0 & value < 20) #subsetting between 0 and 20, because outside of this range isn't plausible. 
 
 ##make a nicer boxplot
-#s <-ggplot(do.gather,aes(factor(variable),value))
-#s + geom_violin(scale="count", aes(fill=factor(variable)), kernel="gaussian", trim=FALSE)+
-#  geom_boxplot(width=0.2,notch=TRUE)+
-#  labs(title="Dissolved Oxygen", x="station", y="(mg/L)")+
-#  stat_summary(fun.y = "mean", geom="point", shape =8, size=1, color="purple")+
-#  geom_hline(yintercept = 2)+
-#  geom_hline(yintercept = 5)
+s <-ggplot(do.gather,aes(factor(variable),value))
+s + geom_violin(scale="count", aes(fill=factor(variable)), kernel="gaussian", trim=FALSE)+
+  geom_boxplot(width=0.2,notch=TRUE)+
+  labs(title="Dissolved Oxygen", x="station", y="(mg/L)")+
+  stat_summary(fun.y = "mean", geom="point", shape =8, size=1, color="purple")+
+  geom_hline(yintercept = 2)+
+  geom_hline(yintercept = 5)
 
 
 
