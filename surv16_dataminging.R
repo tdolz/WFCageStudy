@@ -155,33 +155,33 @@ for(i in 1:length(new.T$MDS.T)){
 new.T$MDS.T <- as.numeric(as.character(new.T$MDS.T))
 
 #Temperature timeseries
-windows(30,20) #change to quartz
-par(mfrow=c(2,3))
-par(mar=c(4,4,1,1))
+#windows(30,20) #change to quartz
+#par(mfrow=c(2,3))
+#par(mar=c(4,4,1,1))
 #MDD.T
-plot(new.T$index,new.T$MDD.T, ylim=c(10,30),ylab="(C)",main="MDD.T", cex=2)
-abline(h=18.5)
-abline(h=27)
+#plot(new.T$index,new.T$MDD.T, ylim=c(10,30),ylab="(C)",main="MDD.T", cex=2)
+#abline(h=18.5)
+#abline(h=27)
 #MDS.T
-plot(new.T$index,new.T$MDS.T, ylim=c(10,30),ylab="(C)",main="MDS.T", cex=2)
-abline(h=18.5)
-abline(h=27)
+#plot(new.T$index,new.T$MDS.T, ylim=c(10,30),ylab="(C)",main="MDS.T", cex=2)
+#abline(h=18.5)
+#abline(h=27)
 #CPD.T
-plot(new.T$index,new.T$CPD.T, ylim=c(10,30),ylab="(C)",main="CPD.T", cex=2)
-abline(h=18.5)
-abline(h=27)
+#plot(new.T$index,new.T$CPD.T, ylim=c(10,30),ylab="(C)",main="CPD.T", cex=2)
+#abline(h=18.5)
+#abline(h=27)
 #CPS.T
-plot(new.T$index,new.T$CPS.T, ylim=c(10,30),ylab="(C)",main="CPS.T", cex=2)
-abline(h=18.5)
-abline(h=27)
+#plot(new.T$index,new.T$CPS.T, ylim=c(10,30),ylab="(C)",main="CPS.T", cex=2)
+#abline(h=18.5)
+#abline(h=27)
 #RSD.T
-plot(new.T$index,new.T$RSD.T, ylim=c(10,30),ylab="(C)",main="RSD.T", cex=2)
-abline(h=18.5)
-abline(h=27)
+#plot(new.T$index,new.T$RSD.T, ylim=c(10,30),ylab="(C)",main="RSD.T", cex=2)
+#abline(h=18.5)
+#abline(h=27)
 #RSS.T
-plot(new.T$index,new.T$RSS.T, ylim=c(10,30),ylab="(C)",main="RSS.T", cex=2)
-abline(h=18.5)
-abline(h=27)
+#plot(new.T$index,new.T$RSS.T, ylim=c(10,30),ylab="(C)",main="RSS.T", cex=2)
+#abline(h=18.5)
+#abline(h=27)
 
 
 
@@ -276,7 +276,7 @@ vert2 <-mutate(vert2,site=substr(station,1,2),depth=substr(station,3,3))
 ##we need to figure out a way to make it clear that the position of these values is relative, so a real index.
 vert2_2016 <-group_by(vert2,index)
 vert2_2016 <-as.data.frame(arrange(vert2,station)) #i think that worked?
-write.csv(vert2_2016, file="vert2_2016.csv")
+#write.csv(vert2_2016, file="vert2_2016.csv")
 
 
 #we need now to do the cumulative columns. 

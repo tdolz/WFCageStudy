@@ -23,6 +23,7 @@ library("reshape")
 library("lme4")
 library("ggpubr")
 library("plotrix")
+library("stringr")
 
 #keeping everything in this folder
 setwd("/Users//tdolan/Documents/Documents//R-Github/WFCageStudy")
@@ -52,6 +53,34 @@ grow17 <-filter(grow17, survivors > 0)#get rid of weeks where no fish are left.
 grow.scale17 <- mutate_at(grow17, vars(biom, min.do, max.do, mean.do, sd.do, min.temp, sd.do, min.temp, max.temp, sd.T, do.dur, temp.dur, mean.sal, sd.sal, ssat), scale)
 ##############
 ###### Visualization no model, just averages ######
+svwk2016 <-mutate(svwk2016, cagenum = str_sub(cage,-1,-1))
+##number of survivors ###
+ggplot(data=svwk2016,aes(x=week,y=survivors, linetype = cagenum))+
+  #geom_point(alpha=1/10)+
+  geom_line() +
+  scale_color_grey()+
+  #ylim(0,10)+ 
+  scale_y_discrete(limits=c(0,5,10))+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
+  facet_grid(site~depth)+
+  theme_few()
+
+#2017
+svwk2017 <-mutate(svwk2017, cagenum = str_sub(cage,-1,-1))
+##number of survivors ###
+ggplot(data=svwk2017,aes(x=week,y=survivors, linetype = cagenum))+
+  #geom_point(alpha=1/10)+
+  geom_line() +
+  scale_color_grey()+
+  #ylim(0,10)+ 
+  scale_y_discrete(limits=c(0,5,10))+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
+  facet_grid(site~depth)+
+  theme_few()
+
+
+
+
 #actual fishlength data with the average OVERLAID
 ggplot(data=svwk2016,aes(x=week,y=fishlength, color = cage))+
   geom_point(alpha=1/10)+
