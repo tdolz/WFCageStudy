@@ -52,6 +52,8 @@ grow17 <-filter(grow17, survivors > 0)#get rid of weeks where no fish are left.
 #create a dataset where variables are scaled. 
 grow.scale17 <- mutate_at(grow17, vars(biom, min.do, max.do, mean.do, sd.do, min.temp, sd.do, min.temp, max.temp, sd.T, do.dur, temp.dur, mean.sal, sd.sal, ssat), scale)
 ##############
+
+
 ###### Visualization no model, just averages ######
 svwk2016 <-mutate(svwk2016, cagenum = str_sub(cage,-1,-1))
 ##number of survivors ###
