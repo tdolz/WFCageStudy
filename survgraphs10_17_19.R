@@ -119,7 +119,7 @@ ggsurvplot(fitnew, conf.int = TRUE, palette = "Dark2",
 ############################
 ##### marginal effects ########
 
-##NOW WITH GG ADJUSTED CURVES
+##NOW WITH GG ADJUSTED CURVES- because ggsurvplot is not working for some reason anymore. 
 
 #2016#
 #the effects for dcor16 are site, min.temp
@@ -127,11 +127,18 @@ av.mintemp <- mean(svwk2016$min.temp)
 
 # looking at marginal effect of site, holding minimum temperature to it's average for the year. 
 #average minimum temperature across whole year is 18.84001
-fitnew2 <-survfit(dcor16, newdata=data.frame(site=c("CP","MD","RS"),min.temp=rep(av.mintemp),3), data=svwk2016)
-ggsurvplot(fitnew2, conf.int = TRUE, palette = "Dark2", 
-           censor = FALSE, fun="pct", size=1, surv.median.line = "hv", risk.table=FALSE,  legend.labs=c("CP","MD","RS"), xlim=c(2,11), break.x.by=1)
+dcor16.edit <-survfit(Surv(start, end, event2)~ min.temp + cluster(cage) + strata(site),na.action="na.fail", data=svwk2016)
+#fitnew2 <-survfit(dcor16, newdata=data.frame(site=c("CP","MD","RS"),min.temp=rep(av.mintemp),3), data=svwk2016)
+fitnew2 <-survfit(dcor16, data=svwk2016)
+
+ggadjustedcurves(dcor16.edit, data=svwk2016, conf.int = TRUE, palette = "Dark2", 
+           censor = FALSE, fun="pct", size=1, surv.median.line = "hv", risk.table=TRUE,  legend.labs=c("CP","MD","RS"), xlim=c(2,11), break.x.by=1)
 summary(fitnew2) # just printing the summary is the risk table
 # The pval comes from the log rank test, so perform the log rank test to extrac the pval. The logrank test for the fitb model is p =3e-12.  
+
+ggsurvplot(dcor16.edit, data=svwk2016, conf.int=TRUE, pval=TRUE, fun="pct", risk.table=TRUE,
+           size=1, linetype = "strata", palette=c("#bdc9e1","#67a9cf","#02818a"), legend="bottom", legend.title="site")
+
 
 
 #Now these are the prediction graphs, we're looking at what would happen if minimum temperature was really high vs. really low. 
@@ -183,6 +190,14 @@ ggsurvplot(fitnew2, conf.int = TRUE, palette = "Dark2",
 summary(fitnew2) # just printing the summary is the risk table
 # The pval comes from the log rank test, so perform the log rank test to extrac the pval. The logrank test for the fitb model is p =3e-12.  
 
+###ggadjusted curves
+cox_prev17.edit <-survfit(Surv(start, end, event2)~mean.temp+temp.dur+mean.sal + cluster(cage)+ strata(depth),na.action ="na.fail", data=svwk2017)
+
+#fitnew2 <-survfit(dcor16, newdata=data.frame(site=c("CP","MD","RS"),min.temp=rep(av.mintemp),3), data=svwk2016)
+fitnew2 <-survfit(dcor16, data=svwk2016)
+
+ggadjustedcurves(cox_prev17.edit, data=svwk2017, conf.int = TRUE, palette = "Dark2", 
+                 censor = FALSE, fun="pct", size=1, surv.median.line = "hv", risk.table=TRUE,  legend.labs=c("deep","shallow"), xlim=c(2,11), break.x.by=1)
 
 
 #looking at marginal effect of mean.temp, holding everything else constant. 
@@ -302,7 +317,8 @@ ggsurvplot(fit, data = svwk2017, combine = TRUE, # Combine curves
 #change out the model and dataset for year. 
 cb <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted)) %>% mutate(inst = 1-exp((1-survprob)/7))
 cbgg <- ggplot(cb, aes(x=week, y=survprob, color=station))
-cbgg + geom_line()+theme_bw() + ylim(0,1.0)
+cbgg + geom_line()+theme_bw() + ylim(0,1.0)+
+  
 
 #######
 ######### Violin plots of covariates ###############
