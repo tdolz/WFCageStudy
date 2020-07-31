@@ -119,6 +119,8 @@ ggsurvplot(fitnew, conf.int = TRUE, palette = "Dark2",
 ############################
 ##### marginal effects ########
 
+##NOW WITH GG ADJUSTED CURVES
+
 #2016#
 #the effects for dcor16 are site, min.temp
 av.mintemp <- mean(svwk2016$min.temp)
