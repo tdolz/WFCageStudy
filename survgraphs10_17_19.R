@@ -22,7 +22,7 @@ setwd("/Users//tdolan/Documents//WIP research/Caging paper/data/heather meeting/
 
 svwk2016 <-read.csv("weeklysummarydata_2016_10-8-19.csv", header=TRUE) # the weekly summary data, covariates are unscaled
 svwk2017 <-read.csv("weeklysummarydata_2017.csv", header=TRUE) # the weekly summary data, covariates are unscaled
-
+cagetotals <-read.csv("cagetotals_17fixed.csv", header=TRUE)
 
 #2016 best models
 dcor16 <-coxph(Surv(start, end, event2)~ site + min.temp + cluster(cage),na.action="na.fail", data=svwk2016)
@@ -297,10 +297,38 @@ ggsurvplot(fit, data = svwk2017, combine = TRUE, # Combine curves
 
 ###################
 #### Survival probability vs. time ####
-#change out the model and dataset for year. 
-cb <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted)) %>% mutate(inst = 1-exp((1-survprob)/7))
-cbgg <- ggplot(cb, aes(x=week, y=survprob, color=station))
-cbgg + geom_line()+theme_bw() + ylim(0,1.0)
+#2017 
+#cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted), fittedup =fitted + se.fitted, fittedlo = fitted-se.fitted) %>% mutate(inst = 1-exp((1-survprob)/7), spup=exp(-fittedup),splo=exp(-fittedlo))
+cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted)) %>% mutate(inst = 1-exp((1-survprob)/7))
+
+#create the mean value
+cgply17 <-ddply(cagetotals, Week~Site~depth, summarize, surv=sum(survivors))
+
+
+
+cb17 %>%
+  filter(!is.nan(se.fitted))%>%
+ggplot(aes(x=week, y=survprob, color="red"))+
+ geom_line()+theme_bw() + ylim(0,1.0)+
+  geom_line(aes(x=week, y=))+
+  #geom_ribbon(aes(x=week,ymin=splo,ymax=spup), alpha=0.1)+ #s.e.
+  #scale_x_discrete(limits=c(1,2,3,4,5,6,7,8,9,10,11),labels=c("1"="15-Jun","2"="21-Jun","3"="29-Jun","4"="7-Jul", "5"="12-Jul", "6"="16-Jul","7"="20-Jul","8"="26-Jul", "9"="3-Aug","10"="9-Aug","11"="17-Aug"))+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
+  facet_grid(site~depth)+
+  theme_few()
+
+#2017
+svwk2017 <-mutate(svwk2017, cagenum = str_sub(cage,-1,-1))
+##number of survivors ###
+ggplot(data=svwk2017,aes(x=week,y=survivors, linetype = cagenum))+
+  #geom_point(alpha=1/10)+
+  geom_line() +
+  scale_color_grey()+
+  #ylim(0,10)+ 
+  scale_y_discrete(limits=c(0,5,10))+
+  #scale_x_discrete(limits=c(0,1,2,3,4,5,6,7,8,9,10,11),labels=c("0"="9-Jun","1"="15-Jun","2"="21-Jun","3"="29-Jun","6"="16-Jul","7"="20-Jul","8"="26-Jul", "9"="3-Aug","10"="9-Aug","11"="17-Aug"))+
+  facet_grid(site~depth)+
+  theme_few()
 
 #######
 ######### Violin plots of covariates ###############
