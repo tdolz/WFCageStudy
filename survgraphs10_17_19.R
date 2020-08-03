@@ -17,12 +17,14 @@ library("MuMIn")
 library("corrplot")
 library("MASS")
 
-setwd("/Users//tdolan/Documents//WIP research/Caging paper/data/heather meeting/caging_rproj")
+#setwd("/Users//tdolan/Documents//WIP research/Caging paper/data/heather meeting/caging_rproj")
+setwd("/Users/tdolan/Documents/R-Github/WFCageStudy")
 
 
 svwk2016 <-read.csv("weeklysummarydata_2016_10-8-19.csv", header=TRUE) # the weekly summary data, covariates are unscaled
 svwk2017 <-read.csv("weeklysummarydata_2017.csv", header=TRUE) # the weekly summary data, covariates are unscaled
 cagetotals17 <-read.csv("cagetotals_17fixed.csv", header=TRUE)
+cagetotals16 <-read.csv("cagetotals_16.csv", header=TRUE)
 
 #2016 best models
 dcor16 <-coxph(Surv(start, end, event2)~ site + min.temp + cluster(cage),na.action="na.fail", data=svwk2016)
@@ -300,48 +302,65 @@ ggsurvplot(fit, data = svwk2017, combine = TRUE, # Combine curves
 #2017 
 #cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted), fittedup =fitted + se.fitted, fittedlo = fitted-se.fitted) %>% mutate(inst = 1-exp((1-survprob)/7), spup=exp(-fittedup),splo=exp(-fittedlo))
 cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted)) %>% mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors)
+cagedeaths17 <-dplyr::select(cagetotals17, Site, depth, Week, CageID, deaths) %>% dplyr::rename(site=Site,cage=CageID, week=Week)
+cb17 <-left_join(cb17, cagedeaths17, by=c("site","depth","week","cage"))
+cb17 <-mutate(cb17, death.per=deaths/survivors, surv.per=(survivors-deaths)/survivors)
 
-cb17 <-full_join(cb17, cagetotals17, by=c("site"))
 
-#library("zoo")
-#temp.zoo <-zoo(cb17$nd,cb17$week)
-#m.av <-rollmean(temp.zoo, 3, fill=list(NA,NULL,NA))
-#cb17$mav=coredata(m.av)
-
-#create the mean value
-#cagetotals <-mutate(cagetotals, numdead=10-survivors)
-#cgply17 <-ddply(cagetotals, Week~Site~depth, summarize, surv=sum(survivors), ndead=sum(numdead)) %>% dplyr::rename(site=Site)
-#cb17 <-left_join(cb17,cgply17, by=c("site","depth"))
-
-coeff <-10
+coeff <-1
 cb17 %>%
   filter(!is.nan(se.fitted))%>%
+  filter(week > 0)%>%
 ggplot(aes(x=week))+
  geom_line(aes(y=survprob), color="red")+
-  geom_point(aes(y=survivors/coeff),color="blue", alpha=0.02)+
-  geom_smooth(aes(y=survivors/coeff, method="loess"),color="blue")+
-  scale_y_continuous(
-    name = "Survival Probability",
-    sec.axis=sec_axis(trans=~.*10, name="weekly mortality"))+
+  geom_point(aes(y=surv.per/coeff),color="blue", alpha=0.02)+
+  geom_smooth(aes(y=surv.per/coeff, method="loess"),color="blue",linetype="dashed", size=0.5, se=FALSE)+
+  scale_y_continuous(limits=c(0,1),
+    name = " ",
+  )+
+    #sec.axis=sec_axis(trans=~.*1, name="percent survived"))+
     #+theme_bw() + ylim(0,1.0)+
-  #geom_ribbon(aes(x=week,ymin=splo,ymax=spup), alpha=0.1)+ #s.e.
-  #scale_x_discrete(limits=c(1,2,3,4,5,6,7,8,9,10,11),labels=c("1"="15-Jun","2"="21-Jun","3"="29-Jun","4"="7-Jul", "5"="12-Jul", "6"="16-Jul","7"="20-Jul","8"="26-Jul", "9"="3-Aug","10"="9-Aug","11"="17-Aug"))+
-  scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"), name="")+
   facet_grid(site~depth)+
+  #theme(axis.line.y.right = element_line(color = "blue"), 
+  #       axis.ticks.y.right = element_line(color = "blue"),
+  #      axis.line.y.left = element_line(color = "red"), 
+   #     axis.ticks.y.left = element_line(color = "red"),
+   #     panel.background = element_rect(fill = "white", colour = "white"))
   theme_few()
+#ggsave("survpred17.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
 
-#2017
-svwk2017 <-mutate(svwk2017, cagenum = str_sub(cage,-1,-1))
-##number of survivors ###
-ggplot(data=svwk2017,aes(x=week,y=survivors, linetype = cagenum))+
-  #geom_point(alpha=1/10)+
-  geom_line() +
-  scale_color_grey()+
-  #ylim(0,10)+ 
-  scale_y_discrete(limits=c(0,5,10))+
-  #scale_x_discrete(limits=c(0,1,2,3,4,5,6,7,8,9,10,11),labels=c("0"="9-Jun","1"="15-Jun","2"="21-Jun","3"="29-Jun","6"="16-Jul","7"="20-Jul","8"="26-Jul", "9"="3-Aug","10"="9-Aug","11"="17-Aug"))+
+
+#2016
+cb16 <-prediction(dcor16, type="expected") %>% mutate(survprob=exp(-fitted)) %>% mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors)
+cagedeaths16 <-dplyr::select(cagetotals16, Site, depth, Week, CageID, deaths) %>% dplyr::rename(site=Site,cage=CageID, week=Week)
+cb16 <-left_join(cb16, cagedeaths16, by=c("site","depth","week","cage"))
+cb16 <-mutate(cb16, death.per=deaths/survivors, surv.per=(survivors-deaths)/survivors)
+
+
+coeff <-1
+cb16 %>%
+  filter(!is.nan(se.fitted))%>%
+  filter(week > 0)%>%
+  ggplot(aes(x=week))+
+  geom_line(aes(y=survprob), color="red")+
+  geom_point(aes(y=surv.per/coeff),color="blue", alpha=0.02)+
+  geom_smooth(aes(y=surv.per/coeff, method="loess"),color="blue",linetype="dashed", size=0.5, se=FALSE)+
+  scale_y_continuous(limits=c(0,1),
+                     name = " ",
+  )+
+  #sec.axis=sec_axis(trans=~.*1, name="percent survived"))+
+  #+theme_bw() + ylim(0,1.0)+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"), name="")+
   facet_grid(site~depth)+
   theme_few()
+#ggsave("survpred16.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+
+
+
 
 #######
 ######### Violin plots of covariates ###############
