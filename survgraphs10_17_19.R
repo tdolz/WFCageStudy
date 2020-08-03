@@ -22,7 +22,7 @@ setwd("/Users//tdolan/Documents//WIP research/Caging paper/data/heather meeting/
 
 svwk2016 <-read.csv("weeklysummarydata_2016_10-8-19.csv", header=TRUE) # the weekly summary data, covariates are unscaled
 svwk2017 <-read.csv("weeklysummarydata_2017.csv", header=TRUE) # the weekly summary data, covariates are unscaled
-cagetotals <-read.csv("cagetotals_17fixed.csv", header=TRUE)
+cagetotals17 <-read.csv("cagetotals_17fixed.csv", header=TRUE)
 
 #2016 best models
 dcor16 <-coxph(Surv(start, end, event2)~ site + min.temp + cluster(cage),na.action="na.fail", data=svwk2016)
@@ -299,18 +299,31 @@ ggsurvplot(fit, data = svwk2017, combine = TRUE, # Combine curves
 #### Survival probability vs. time ####
 #2017 
 #cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted), fittedup =fitted + se.fitted, fittedlo = fitted-se.fitted) %>% mutate(inst = 1-exp((1-survprob)/7), spup=exp(-fittedup),splo=exp(-fittedlo))
-cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted)) %>% mutate(inst = 1-exp((1-survprob)/7))
+cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted)) %>% mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors)
+
+cb17 <-full_join(cb17, cagetotals17, by=c("site"))
+
+#library("zoo")
+#temp.zoo <-zoo(cb17$nd,cb17$week)
+#m.av <-rollmean(temp.zoo, 3, fill=list(NA,NULL,NA))
+#cb17$mav=coredata(m.av)
 
 #create the mean value
-cgply17 <-ddply(cagetotals, Week~Site~depth, summarize, surv=sum(survivors))
+#cagetotals <-mutate(cagetotals, numdead=10-survivors)
+#cgply17 <-ddply(cagetotals, Week~Site~depth, summarize, surv=sum(survivors), ndead=sum(numdead)) %>% dplyr::rename(site=Site)
+#cb17 <-left_join(cb17,cgply17, by=c("site","depth"))
 
-
-
+coeff <-10
 cb17 %>%
   filter(!is.nan(se.fitted))%>%
-ggplot(aes(x=week, y=survprob, color="red"))+
- geom_line()+theme_bw() + ylim(0,1.0)+
-  geom_line(aes(x=week, y=))+
+ggplot(aes(x=week))+
+ geom_line(aes(y=survprob), color="red")+
+  geom_point(aes(y=survivors/coeff),color="blue", alpha=0.02)+
+  geom_smooth(aes(y=survivors/coeff, method="loess"),color="blue")+
+  scale_y_continuous(
+    name = "Survival Probability",
+    sec.axis=sec_axis(trans=~.*10, name="weekly mortality"))+
+    #+theme_bw() + ylim(0,1.0)+
   #geom_ribbon(aes(x=week,ymin=splo,ymax=spup), alpha=0.1)+ #s.e.
   #scale_x_discrete(limits=c(1,2,3,4,5,6,7,8,9,10,11),labels=c("1"="15-Jun","2"="21-Jun","3"="29-Jun","4"="7-Jul", "5"="12-Jul", "6"="16-Jul","7"="20-Jul","8"="26-Jul", "9"="3-Aug","10"="9-Aug","11"="17-Aug"))+
   scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
