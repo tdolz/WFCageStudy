@@ -24,9 +24,10 @@ library("lme4")
 library("ggpubr")
 library("plotrix")
 library("stringr")
+library("ggthemes")
 
 #keeping everything in this folder
-setwd("/Users//tdolan/Documents/Documents//R-Github/WFCageStudy")
+setwd("/Users/tdolan/Documents/R-Github/WFCageStudy")
 
 #load the data
 svrt16 <-read.csv("svrt2016forgrowth.csv", header=TRUE)
@@ -80,23 +81,32 @@ ggplot(data=svwk2017,aes(x=week,y=survivors, linetype = cagenum))+
   facet_grid(site~depth)+
   theme_few()
 
-
-
-
-#actual fishlength data with the average OVERLAID
-ggplot(data=svwk2016,aes(x=week,y=fishlength, color = cage))+
-  geom_point(alpha=1/10)+
-  #scale_x_discrete(breaks=c("2","3","4","5","6","7","8","9","11"), labels=c("14-Jun","24-Jun","4-Jul","14-Jul","24-Jul","3-Aug","13-Aug","23-Aug","2-Sep"))+  # well that aggressively didn't work. 
-  geom_line(aes(y=av_length, color=cage)) +
+## GROWTH ##
+#rugs for number of fish?
+#actual fishlength data with the average OVERLAID or not. 
+ggplot(data=svwk2016,aes(x=week,y=fishlength))+
+  #geom_point(alpha=1/10)+
+  ylab("length (mm)")+xlab("")+
+  ylim(40,110)+
+  geom_rug(alpha = 1/2, position = "jitter", sides="b")+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
+  geom_line(aes(y=av_length, linetype=cagenum)) +
   facet_grid(site~depth)+
-  theme_pubclean()
+  theme_few()
+#ggsave("actualgrowth16.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
 
-ggplot(data=svwk2017,aes(x=week,y=fishlength, color = cage))+
-  geom_point(alpha=1/10)+
-  #scale_x_discrete(breaks=c("2","3","4","5","6","7","8","9","11"), labels=c("14-Jun","24-Jun","4-Jul","14-Jul","24-Jul","3-Aug","13-Aug","23-Aug","2-Sep"))+  # well that aggressively didn't work. 
-  geom_line(aes(y=avlength, color=cage)) +
+ggplot(data=svwk2017,aes(x=week,y=fishlength))+
+  #geom_point(alpha=1/10)+
+  ylab("length (mm)")+xlab("")+
+  ylim(40,110)+
+  geom_rug(alpha = 1/2, position = "jitter", sides="b")+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
+  geom_line(aes(y=avlength, linetype=cagenum)) +
   facet_grid(site~depth)+
-  theme_pubclean()
+  theme_few()
+#ggsave("actualgrowth17.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
 ########
 
 ##2016 top models
@@ -133,18 +143,47 @@ ggplot(grow16,aes(x=week,y=av_length)) +
 ##################
 ######## growth models over data, by cage #############
 
-#over fishlength & cage average 2016
-ggplot(data=svwk2016,aes(x=week,y=fishlength, color = cage))+
-  geom_point(alpha=1/3, shape=1)+
-  geom_point(data=grow16,aes(x=week,y=av_length, color = cage))+
-  #scale_x_discrete(breaks=c("2","3","4","5","6","7","8","9","11"), labels=c("14-Jun","24-Jun","4-Jul","14-Jul","24-Jul","3-Aug","13-Aug","23-Aug","2-Sep"))+  # well that aggressively didn't work. 
-  #geom_line(aes(y=av_length, color=cage)) + #actual average
-  ylab("Average length (mm)")+
-  geom_line(data = cbind(grow16, pred = predict(pwin16, level=1)), aes(y = pred)) + #predicted average
-  facet_grid(site~depth)+
-  theme_classic()
+drabcolors <-c("#969696", "#a6bddb","#3690c0","#016450")
+boldcolors <-c("#ca0020","blue","#404040","grey")
+sandycolors <-c("#a6611a", "#dfc27d","#80cdc1","#018571")
 
-#over fishlength & cage average 2017
+#New Formulation:: 2016
+grow16 <-mutate(grow16, cagenum = str_sub(cage,-1,-1))
+ggplot(data=svwk2016,aes(x=week,y=fishlength, color =cagenum))+
+  geom_rug(alpha = 1/2, position = "jitter", sides="b")+
+  scale_color_manual(values=drabcolors)+
+  ylab("length (mm)")+xlab("")+
+  ylim(40,110)+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
+  geom_line(aes(y=av_length), linetype="solid") + #actual average
+  ylab("Average length (mm)")+
+  geom_line(data = cbind(grow16, pred = predict(pwin16, level=1)), aes(y = pred),linetype="dashed") + #predicted average
+  facet_grid(site~depth)+
+  theme_few()
+#ggsave("actualgrowth16wmodel.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+#New Formulation:: 2017
+grow17 <-mutate(grow17, cagenum = str_sub(cage,-1,-1))
+ggplot(data=svwk2017,aes(x=week,y=fishlength, color =cagenum))+
+  geom_rug(alpha = 1/2, position = "jitter", sides="b")+
+  scale_color_manual(values=drabcolors)+
+  ylab("length (mm)")+xlab("")+
+  ylim(40,110)+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
+  geom_point(alpha=1/3, shape=1)+
+  #geom_line(aes(y=av_length), linetype="dashed", data=grow17) + #actual average
+  ylab("Average length (mm)")+
+  geom_line(data = cbind(grow17, pred = predict(d73A, level=1)), aes(y = pred),linetype="solid") + #predicted average
+  facet_grid(site~depth)+
+  theme_few()
+#ggsave("actualgrowth17wmodel.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+
+
+
+#Previous formulation::: over fishlength & cage average 2017
 ggplot(data=svwk2017,aes(x=week,y=fishlength, color = cage))+
   geom_point(alpha=1/3, shape=1)+
   geom_point(data=grow17,aes(x=week,y=av_length, color = cage))+
