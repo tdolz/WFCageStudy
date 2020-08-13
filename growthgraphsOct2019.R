@@ -290,9 +290,120 @@ p2
 ## and growth variation by cage
 ## growth rate by cage, is it higher where more fish are recovered? Maybe a lrt. 
 ## and difference between observed and predicted vs. number of fish left. 
-newdf16
-newdf17
 
+### 2016 ##
+vargrowth <-ddply(svwk2016,week~cage~cagenum~station, summarize, surv=max(survivors), varlength=sd(fishlength), meanlength=mean(fishlength))
+
+changelength <- function(df){
+  deltalength <-c()
+  for (i in 2:length(df$meanlength)){
+    deltalength[i] <-df$meanlength[i]-df$meanlength[i-1]}
+  deltalength[1] <-0
+  df <-cbind(df,deltalength)
+}
+
+lm_eqn <- function(df){
+  m <- lm(y ~ x, df);
+  eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+                   list(a = format(unname(coef(m)[1]), digits = 2),
+                        b = format(unname(coef(m)[2]), digits = 2),
+                        r2 = format(summary(m)$r.squared, digits = 3)))
+  as.character(as.expression(eq));
+}
+
+vargrowth <-vargrowth %>% base::split(.$cage)%>%
+  purrr::map_dfr(changelength)
+
+#weekly growth vs. vs. number of survivors
+p2 <- ggplot(vargrowth) + 
+  geom_point(aes(x=surv,y=deltalength), position = position_jitter(w = 0)) +
+  scale_x_discrete(limits=c(0,2,4,6,8,10))+
+  geom_smooth(aes(x=surv,y=deltalength), method="lm") +
+  xlab("number of survivors")+ylab("weekly growth (mm)")+
+  theme_few()
+p2
+#ggsave("grow16growthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+#weekly growth vs. variance in length
+p2 <- ggplot(vargrowth) + 
+  geom_point(aes(x=surv,y=varlength), position = position_jitter(w = 0)) +
+  scale_x_discrete(limits=c(0,2,4,6,8,10))+
+  geom_smooth(aes(x=surv,y=varlength), method="lm") +
+  xlab("number of survivors")+ylab("standard deviation of length")+
+  theme_few()
+p2
+#ggsave("grow16SDgrowthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+#find initial length and then get overall slope for each cage. 
+library("purrr")
+
+models <-svwk2016 %>% base::split(.$cage)%>%
+  purrr::map(function(df) lm(fishlength~week,data = df))
+slopes <-models %>% map(summary) %>% map_dbl(~.$coefficients[2]) #slope
+
+initial_length <-svwk2016 %>% filter(week==2)%>% base::split(.$cage) %>% map_dfr(summarize, initlenght=mean(fishlength)) 
+
+slopes<-cbind(slopes,initial_length)
+slopes <-mutate(slopes, growth=slopes/7)
+#weekly growth vs. initial length
+p2 <- ggplot(slopes) + 
+  geom_point(aes(x=initlenght,y=growth), position = position_jitter(w = 0)) +
+  #scale_x_discrete(limits=c(0,2,4,6,8,10))+
+  geom_smooth(aes(x=initlenght,y=growth), method="lm") +
+  xlab("initial length (mm)")+ylab("average growth (mm/day)")+
+  theme_few()
+p2
+#ggsave("initiallengthvsgrowth16.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+### 2017 ##
+vargrowth <-ddply(svwk2017,week~cage~cagenum~station, summarize, surv=max(survivors), varlength=sd(fishlength), meanlength=mean(fishlength))
+vargrowth <-vargrowth %>% base::split(.$cage)%>%
+  purrr::map_dfr(changelength)
+
+#weekly growth vs. vs. number of survivors
+p2 <- ggplot(vargrowth) + 
+  geom_point(aes(x=surv,y=deltalength), position = position_jitter(w = 0)) +
+  scale_x_discrete(limits=c(0,2,4,6,8,10))+
+  geom_smooth(aes(x=surv,y=deltalength), method="lm") +
+  xlab("number of survivors")+ylab("weekly growth (mm)")+
+  theme_few()
+p2
+#ggsave("grow17growthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+#weekly growth vs. variance in length
+p2 <- ggplot(vargrowth) + 
+  geom_point(aes(x=surv,y=varlength), position = position_jitter(w = 0)) +
+  scale_x_discrete(limits=c(0,2,4,6,8,10))+
+  geom_smooth(aes(x=surv,y=varlength), method="lm") +
+  xlab("number of survivors")+ylab("standard deviation of length")+
+  theme_few()
+p2
+#ggsave("grow17SDgrowthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+
+models <-svwk2017 %>% base::split(.$cage)%>%
+  purrr::map(function(df) lm(fishlength~week,data = df))
+slopes <-models %>% map(summary) %>% map_dbl(~.$coefficients[2]) #slope
+
+initial_length <-svwk2017 %>% filter(week==2)%>% base::split(.$cage) %>% map_dfr(summarize, initlenght=mean(fishlength)) 
+
+slopes<-cbind(slopes,initial_length)
+slopes <-mutate(slopes, growth=slopes/7)
+#weekly growth vs. initial length
+p2 <- ggplot(slopes) + 
+  geom_point(aes(x=initlenght,y=growth), position = position_jitter(w = 0)) +
+  #scale_x_discrete(limits=c(0,2,4,6,8,10))+
+  geom_smooth(aes(x=initlenght,y=growth), method="lm") +
+  xlab("initial length (mm)")+ylab("average growth (mm/day)")+
+  theme_few()
+p2
+#ggsave("initiallengthvsgrowth.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
 
 ########## marginal effect of site  #########
 
