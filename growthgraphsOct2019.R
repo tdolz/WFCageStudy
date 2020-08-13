@@ -3,6 +3,7 @@
 ### October 19, 2019
 ### model selection done in the script "growthrevisited2019.R" in the folder caging_rproj
 
+#### setup ####
 #packages you will need
 library("MASS")
 library("ggfortify")
@@ -25,6 +26,8 @@ library("ggpubr")
 library("plotrix")
 library("stringr")
 library("ggthemes")
+library("FSA")
+library("purrr")
 
 #keeping everything in this folder
 setwd("/Users/tdolan/Documents/R-Github/WFCageStudy")
@@ -52,8 +55,46 @@ grow17 <-filter(grow17, survivors > 0)#get rid of weeks where no fish are left.
 #grow17 <-mutate_at(grow17,vars(week,site,depth,cage),factor) #factorize the variables. 
 #create a dataset where variables are scaled. 
 grow.scale17 <- mutate_at(grow17, vars(biom, min.do, max.do, mean.do, sd.do, min.temp, sd.do, min.temp, max.temp, sd.T, do.dur, temp.dur, mean.sal, sd.sal, ssat), scale)
-##############
+############## mortality estimates ####
+# a different catch curve for each site
 
+byweek16 <-ddply(svwk2016, station~week, summarize, catch = n_distinct(fishID))
+edays16= c(0,8,14,23,28,36,42,49,58,72)
+byweek16 <-byweek16 %>% base::split(.$station) 
+
+#cpd
+cpd <-mutate(byweek16$CPD, edays=edays16)
+cpd_reg <-catchCurve(catch~edays,data=cpd, ages2use=0:72)
+summary(cpd_reg, verbose=TRUE)
+#so we could repeat this for every station, but instead, I think it's more meaningful to compare just to cormorant point. 
+
+cp16 <-filter(svwk2016, site=="CP")%>%ddply(~week, summarize, catch = n_distinct(fishID)) %>% mutate(edays=edays16)
+cp16_reg <-catchCurve(catch~edays,data=cp16, ages2use=0:72)
+summary(cp16_reg, verbose=TRUE)
+confint(cp16_reg)
+
+#then in 2017, all the stations are at CP, so use all of them? 
+edays17 <-c(0,6,14,22,27,31,35,41,49,55,63)
+cp17 <-ddply(svwk2017, ~week, summarize, catch = n_distinct(fishID)) %>% mutate(edays=edays17)
+cp17_reg <-catchCurve(catch~edays,data=cp17, ages2use=0:63)
+summary(cp17_reg, verbose=TRUE)
+confint(cp17_reg)
+
+#get the other model parameters for the table
+#function to extract model p.value
+lmp <- function (modelobject) {
+  if (class(modelobject) != "lm") stop("Not an object of class 'lm' ")
+  f <- summary(modelobject)$fstatistic
+  p <- pf(f[1],f[2],f[3],lower.tail=F)
+  attributes(p) <- NULL
+  return(p)}
+
+#change out the data
+cp17mod<-lm(log(catch)~edays,data = cp17)
+summary(cp17mod)
+
+cp16mod<-lm(log(catch)~edays,data = cp16)
+summary(cp16mod)
 
 ###### Visualization no model, just averages ######
 svwk2016 <-mutate(svwk2016, cagenum = str_sub(cage,-1,-1))
@@ -107,7 +148,7 @@ ggplot(data=svwk2017,aes(x=week,y=fishlength))+
   theme_few()
 #ggsave("actualgrowth17.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
-########
+######## TOP MODELS #####
 
 ##2016 top models
 pwin16 <-lme(av_length ~ site + max.do + min.temp + temp.dur,random=~week|cage, data=grow16, method="ML") 
@@ -180,9 +221,6 @@ ggplot(data=svwk2017,aes(x=week,y=fishlength, color =cagenum))+
 #ggsave("actualgrowth17wmodel.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
-
-
-
 #Previous formulation::: over fishlength & cage average 2017
 ggplot(data=svwk2017,aes(x=week,y=fishlength, color = cage))+
   geom_point(alpha=1/3, shape=1)+
@@ -247,8 +285,16 @@ p2 <- ggplot(newdf17,aes(x=week,y=pred)) +
   theme_minimal()
 p2
 ##############
-########## marginal effects site 2016, ribbon & sawtooth #########
-#there is no depth separation in 2017 because depth is not in the model. 
+
+##### number of fish vs. growth #####
+## and growth variation by cage
+## growth rate by cage, is it higher where more fish are recovered? Maybe a lrt. 
+## and difference between observed and predicted vs. number of fish left. 
+newdf16
+newdf17
+
+
+########## marginal effect of site  #########
 
 #across all sites
 avmaxdo <-mean(grow16$max.do)#13.92222
@@ -257,132 +303,46 @@ avtdur <-mean(grow16$temp.dur)#581.1594
 
 #re-run from here
 newdf5 <-dplyr::select(grow16, site, week, cage, depth,av_length)
-
-#prediction level
-lev <-1
-fit.stat16 <- predict(pwin16, newdata=newdf5, data=grow16,level=lev)
 
 #populate the new dataframe
 newdf5$max.do=rep(avmaxdo)
 newdf5$min.temp=rep(avmintemp)
 newdf5$temp.dur=rep(avtdur)
-
-#CP
-newdf5_cp <-filter(newdf5,site=="CP")
-fit.site16cp <- predict(pwin16, newdata=newdf5_cp, data=grow16,level=lev)
-Designmatcp <- model.matrix(eval(eval(pwin16$call$fixed)[-2]), newdf5_cp[-ncol(newdf5_cp)])
-newdf5_cp <- cbind(newdf5_cp,fit.site16cp)
-#compute standard error for predictions
-predvarcp <- diag(Designmatcp %*% pwin16$varFix %*% t(Designmatcp))
-newdf5_cp$SE <- sqrt(predvarcp) 
-newdf5_cp$SE2 <- sqrt(predvarcp+pwin16$sigma^2)
-
-#MD
-newdf5_md <-filter(newdf5,site=="MD")
-fit.site16md <- predict(pwin16, newdata=newdf5_md, data=grow16,level=lev)
-Designmatmd <- model.matrix(eval(eval(pwin16$call$fixed)[-2]), newdf5_md[-ncol(newdf5_md)])
-newdf5_md <- cbind(newdf5_md,fit.site16md)
-#compute standard error for predictions
-predvarmd <- diag(Designmatmd %*% pwin16$varFix %*% t(Designmatmd))
-newdf5_md$SE <- sqrt(predvarmd) 
-newdf5_md$SE2 <- sqrt(predvarmd+pwin16$sigma^2)
-
-#RS
-newdf5_rs <-filter(newdf5,site=="RS")
-fit.site16rs <- predict(pwin16, newdata=newdf5_rs, data=grow16,level=lev)
-Designmatrs <- model.matrix(eval(eval(pwin16$call$fixed)[-2]), newdf5_rs[-ncol(newdf5_rs)])
-newdf5_rs <- cbind(newdf5_rs,fit.site16rs)
-#compute standard error for predictions
-predvarrs <- diag(Designmatrs %*% pwin16$varFix %*% t(Designmatrs))
-newdf5_rs$SE <- sqrt(predvarrs) 
-newdf5_rs$SE2 <- sqrt(predvarrs+pwin16$sigma^2)
-
-#p2 <- ggplot(newdf5,aes(x=week,y=av_length,color=cage)) + #if you want the cage level ribbons, and no sawtooth, must turn off geom_line
-p2 <- ggplot(newdf5,aes(x=week)) + 
-  #geom_line(data=newdf5_cp,aes(x=week,y=fit.site16cp),color="darkgreen") +
-  geom_pointrange(data=newdf5_cp,aes(x=week,y=fit.site16cp, ymin=fit.site16cp-2*SE,ymax=fit.site16cp+2*SE),alpha=0.3,color="darkgreen")+
-  #geom_point(data=newdf5_cp,aes(x=week,y=fit.site16cp),color="darkgreen") +
-  #geom_ribbon(data=newdf5_cp,aes(ymin=fit.site16cp-2*SE2,ymax=fit.site16cp+2*SE2),alpha=0.3,fill="darkgreen") +
-  #geom_ribbon(data=newdf5_cp,aes(ymin=fit.site16cp-2*SE,ymax=fit.site16cp+2*SE),alpha=0.1,fill="darkgreen") +
-  
-  #geom_line(data=newdf5_md,aes(x=week,y=fit.site16md),color="firebrick") +
-  geom_pointrange(data=newdf5_md,aes(x=week,y=fit.site16md, ymin=fit.site16md-2*SE,ymax=fit.site16md+2*SE),alpha=0.3,color="firebrick")+
-  #geom_point(data=newdf5_md,aes(x=week,y=fit.site16md),color="firebrick") +
- # geom_ribbon(data=newdf5_md,aes(ymin=fit.site16md-2*SE2,ymax=fit.site16md+2*SE2),alpha=0.3,fill="firebrick") +
-  #geom_ribbon(data=newdf5_md,aes(ymin=fit.site16md-2*SE,ymax=fit.site16md+2*SE),alpha=0.1,fill="firebrick") +
-  
-  #geom_line(data=newdf5_rs,aes(x=week,y=fit.site16rs),color="blue") +
-  geom_pointrange(data=newdf5_rs,aes(x=week,y=fit.site16rs, ymin=fit.site16rs-2*SE,ymax=fit.site16rs+2*SE),alpha=0.3,color="blue")+
-  #geom_point(data=newdf5_rs,aes(x=week,y=fit.site16rs),color="blue") +
-  #geom_ribbon(data=newdf5_rs,aes(ymin=fit.site16rs-2*SE2,ymax=fit.site16rs+2*SE2),alpha=0.3,fill="blue") +
-  #geom_ribbon(data=newdf5_rs,aes(ymin=fit.site16rs-2*SE,ymax=fit.site16rs+2*SE),alpha=0.1,fill="blue") +
-  
-  #geom_point(data=svwk2016,aes(x=week,y=fishlength),alpha=0.2,fill="gray") +
-  #geom_point(data=newdf5,aes(x=week,y=av_length),fill="blue",shape=23) +
-  ylab("Average Length (mm)")+
-  scale_y_continuous("y")+
-  #facet_grid(site~depth)+
-  facet_wrap(~site)+
-  #facet_wrap(~cage,ncol=4)+
-  theme_minimal()
-p2
-
-#this looks weird. What are my options to get rid of the sawtooth?
-# 1. I could make a separate model for every cage, with bands.
-# 2> I could fith a geom_smooth over the data
-# I could combine all the data into one
-# i could plot by cage and do a sneaky layers plot? 
-# i could get rid of the SE data? & plot 1 line per cage. 
-#############
-########## further attempts at marginal effect of site  #########
-
-#across all sites
-avmaxdo <-mean(grow16$max.do)#13.92222
-avmintemp <-mean(grow16$min.temp)#19.38018
-avtdur <-mean(grow16$temp.dur)#581.1594
-
-#re-run from here
-newdf5 <-dplyr::select(grow16, site, week, cage, depth,av_length)
 
 #prediction level
 lev <-1
 predall <- predict(pwin16, newdata=newdf5, data=grow16,level=lev)
 
-#populate the new dataframe
-newdf5$max.do=rep(avmaxdo)
-newdf5$min.temp=rep(avmintemp)
-newdf5$temp.dur=rep(avtdur)
-
 #predcp
 newdf5_cp <-filter(newdf5,site=="CP")
 fit.site16cp <- predict(pwin16, newdata=newdf5_cp, data=grow16,level=lev)
-Designmatcp <- model.matrix(eval(eval(pwin16$call$fixed)[-2]), newdf5_cp[-ncol(newdf5_cp)])
 newdf5_cp <- cbind(newdf5_cp,fit.site16cp)
+Designmatcp <- model.matrix(eval(eval(pwin16$call$fixed)[-2]), newdf5_cp[-ncol(newdf5_cp)])
 #compute standard error for predictions
 predvarcp <- diag(Designmatcp %*% pwin16$varFix %*% t(Designmatcp))
 newdf5_cp$SE <- sqrt(predvarcp) 
 newdf5_cp$SE2 <- sqrt(predvarcp+pwin16$sigma^2) 
-newdf5_cp <-rename(newdf5_cp,fit.site = fit.site16cp)
+newdf5_cp <-dplyr::rename(newdf5_cp,fit.site = fit.site16cp)
 #MD
 newdf5_md <-filter(newdf5,site=="MD")
 fit.site16md <- predict(pwin16, newdata=newdf5_md, data=grow16,level=lev)
-Designmatmd <- model.matrix(eval(eval(pwin16$call$fixed)[-2]), newdf5_md[-ncol(newdf5_md)])
 newdf5_md <- cbind(newdf5_md,fit.site16md)
+Designmatmd <- model.matrix(eval(eval(pwin16$call$fixed)[-2]), newdf5_md[-ncol(newdf5_md)])
 #compute standard error for predictions
 predvarmd <- diag(Designmatmd %*% pwin16$varFix %*% t(Designmatmd))
 newdf5_md$SE <- sqrt(predvarmd) 
 newdf5_md$SE2 <- sqrt(predvarmd+pwin16$sigma^2)
-newdf5_md <-rename(newdf5_md,fit.site = fit.site16md)
+newdf5_md <-dplyr::rename(newdf5_md,fit.site = fit.site16md)
 #RS
 newdf5_rs <-filter(newdf5,site=="RS")
 fit.site16rs <- predict(pwin16, newdata=newdf5_rs, data=grow16,level=lev)
-Designmatrs <- model.matrix(eval(eval(pwin16$call$fixed)[-2]), newdf5_rs[-ncol(newdf5_rs)])
 newdf5_rs <- cbind(newdf5_rs,fit.site16rs)
+Designmatrs <- model.matrix(eval(eval(pwin16$call$fixed)[-2]), newdf5_rs[-ncol(newdf5_rs)])
 #compute standard error for predictions
 predvarrs <- diag(Designmatrs %*% pwin16$varFix %*% t(Designmatrs))
 newdf5_rs$SE <- sqrt(predvarrs) 
 newdf5_rs$SE2 <- sqrt(predvarrs+pwin16$sigma^2)
-newdf5_rs <-rename(newdf5_rs,fit.site = fit.site16rs)
+newdf5_rs <-dplyr::rename(newdf5_rs,fit.site = fit.site16rs)
 
 newdf6 <-bind_rows(newdf5_cp,newdf5_md,newdf5_rs)
 
@@ -404,15 +364,20 @@ ggplot(data=grow16,aes(x=week, y=av_length,color=site))+
 #a line for the mean predicted cage, over actual average lengths.##
   ## a very hacky way to do it###
 
-ggplot(data=ddnewdf6,aes(y=fit.site,x=week,color=site))+
+ggplot(data=ddnewdf6,aes(y=fit.site,x=week))+
   geom_line()+
-  ylab("Average length (mm)")+
-  #geom_point(data=newdf6,aes(y=fit.site,x=week),alpha=0.5)+
-  geom_ribbon(data=ddnewdf6,aes(ymin=fit.site-2*SE2,ymax=fit.site+2*SE2,x=week),fill="gray",alpha=0.5,inherit.aes=FALSE)+
+  ylab("length (mm)")+ xlab("")+
+  ylim(35,75)+
+  #geom_point(data=newdf6,aes(y=fit.site,x=week),alpha=0.5)+ #this is the predicted data if we held all to 
+  #geom_point(data=svwk2016,aes(y=av_length, x=week))+ #this is the actual data
+  geom_ribbon(data=ddnewdf6,aes(ymin=fit.site-2*SE2,ymax=fit.site+2*SE2,x=week),fill="grey",inherit.aes=FALSE,alpha=0.2,linetype="dotted",size=0.5)+
   #geom_smooth(data=newdf6,method=lm,se=FALSE)+
   #geom_linerange(data=newdf6,aes(ymin=fit.site-2*SE2,ymax=fit.site+2*SE2,x=week),alpha=0.1,inherit.aes=FALSE)+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
   facet_wrap(~site)+
-  theme_classic()
+  theme_few()
+#ggsave("grow16sitemodel.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
 #####################
 ####### marginal effects of other variables 2016 ######
 
@@ -486,63 +451,52 @@ newdf <- cbind(newdf,fit.tdur_low)
 #now we want to make basically a dataframe of all the fits and the actual average length, this will help with plots later. 
 allfits <- dplyr::select(newdf,-max.do,-min.temp,-temp.dur,-av_length)
 allfits <-full_join(grow16,allfits, by=c("cage","site","depth","week"))
-allfits <-dplyr::select(allfits, -biom,-min.do,-max.do,-mean.do,-sd.do,-min.temp,-max.temp,-mean.temp,-sd.T,-do.dur,-temp.dur,-mean.sal,-sd.sal,-ssat,-residuals,-SD,-survivors, -X)
+allfits <-dplyr::select(allfits, -biom,-min.do,-max.do,-mean.do,-sd.do,-min.temp,-max.temp,-mean.temp,-sd.T,-do.dur,-temp.dur,-mean.sal,-sd.sal,-ssat,-SD,-survivors, -X)
 
 #melt version
-af_melt <-gather(allfits,"fit", "pred_value", 6:17)
+af_melt <-pivot_longer(allfits,cols=c("fit.site16","fit.maxdo_high","fit.maxdo_mean","fit.maxdo_low","fit.mintemp_high","fit.mintemp_mean","fit.mintemp_low","fit.tdur_high","fit.tdur_mean","fit.tdur_low"), names_to = "fit")
 af_melt$fit <-as.factor(af_melt$fit)
 
-#just another way to produce the original model over data, but quickly. 
-allfits %>% 
-  #filter(station=="CPS") %>%
-  ggplot(aes(x=week,y=av_length, color=cage))+
-  geom_point(alpha=1/2)+
-  ylab("Average length (mm)")+
-  geom_line(aes(y = predicted),linetype="dashed") + #predicted from original model
-  #geom_line(aes(y = av_length)) + #actual model
-  facet_wrap(~site)+
-  theme_classic()
-
-af_melt %>%
-  #filter(station=="CPD") %>%
-  filter(fit=="fit.maxdo_high"| fit=="fit.maxdo_low" |fit=="fit.maxdo_mean") %>%
-  ggplot(aes(x=week,y=pred_value, color=fit))+
-  ylab("Average length (mm)")+
-  geom_line()+
-  facet_wrap(~station)+
-  #facet_grid(site~depth)+
-  theme_bw()
-
-#so you could plot every cage with it's own geom_line... that is an option. 
-af_meltDO <- dplyr::filter(af_melt,fit=="fit.maxdo_high"|fit=="fit.maxdo_low"|fit=="fit.maxdo_mean")
-ggplot(data=af_meltDO, aes(x=week,y=pred_value, color=fit))+
-  ylab("Average length (mm)")+
-  geom_line(data=subset(af_meltDO, cage=="CPD1" ),aes(x=week,y=pred_value))+
-  geom_line(data=subset(af_meltDO, cage=="CPD2" ),aes(x=week,y=pred_value))+
-  geom_line(data=subset(af_meltDO, cage=="CPD3" ),aes(x=week,y=pred_value))+
-  geom_line(data=subset(af_meltDO, cage=="CPD4" ),aes(x=week,y=pred_value))+
-  geom_line(data=subset(af_meltDO, cage=="CPS1" ),aes(x=week,y=pred_value))+
-  geom_line(data=subset(af_meltDO, cage=="CPS2" ),aes(x=week,y=pred_value))+
-  geom_line(data=subset(af_meltDO, cage=="CPS3" ),aes(x=week,y=pred_value))+
-  geom_line(data=subset(af_meltDO, cage=="CPS4" ),aes(x=week,y=pred_value))+
-  facet_wrap(~site)+
-  theme_minimal()
-#starts to get messy looking already
-
 #You could create a mean value for ALL the cages in a site. 
-ddaf_melt <-ddply(af_melt,week~site~fit,summarise,avpred=mean(pred_value),sepred = std.error(pred_value))
+ddaf_melt <-ddply(af_melt,week~site~fit,summarise,avpred=mean(value),sepred = std.error(value))
 
+
+#TDUR
+#with ribbon instead of linerange
 ggplot(data=ddaf_melt, aes(x=week,y=avpred, color=fit))+
-  #scale_color_manual(values=wes_palette(n=3, name="Darjeeling1"))+
-  ylab("Average length (mm)")+
-  #geom_line(data=subset(ddaf_melt, fit=="fit.maxdo_high"|fit=="fit.maxdo_low"|fit=="fit.maxdo_mean"),aes(x=week,y=avpred,color=fit))+
-  #geom_linerange(data=subset(ddaf_melt, fit=="fit.maxdo_high"|fit=="fit.maxdo_low"|fit=="fit.maxdo_mean"),aes(x=week,ymin=avpred-2*sepred,ymax=avpred+2*sepred),alpha=0.3,)+
-  #geom_line(data=subset(ddaf_melt, fit=="fit.mintemp_high"|fit=="fit.mintemp_low"|fit=="fit.mintemp_mean"),aes(x=week,y=avpred,color=fit))+
-  #geom_linerange(data=subset(ddaf_melt, fit=="fit.mintemp_high"|fit=="fit.mintemp_low"|fit=="fit.mintemp_mean"),aes(x=week,ymin=avpred-2*sepred,ymax=avpred+2*sepred),alpha=0.3,)+
-  geom_line(data=subset(ddaf_melt, fit=="fit.tdur_high"|fit=="fit.tdur_low"|fit=="fit.tdur_mean"),aes(x=week,y=avpred,color=fit))+
-  geom_linerange(data=subset(ddaf_melt, fit=="fit.tdur_high"|fit=="fit.tdur_low"|fit=="fit.tdur_mean"),aes(x=week,ymin=avpred-2*sepred,ymax=avpred+2*sepred),alpha=0.3,)+
+  ylab("length (mm)")+xlab("")+
+  geom_line(data=subset(ddaf_melt, fit=="fit.tdur_high"|fit=="fit.tdur_low"|fit=="fit.tdur_mean"),aes(x=week,y=avpred))+
+  geom_ribbon(data=subset(ddaf_melt, fit=="fit.tdur_high"|fit=="fit.tdur_low"|fit=="fit.tdur_mean"),
+              aes(x=week,ymin=avpred-2*sepred,ymax=avpred+2*sepred,fill=fit),alpha=0.2,linetype="blank")+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
   facet_wrap(~site)+
-  theme_classic()
+  theme_few()
+#ggsave("growmargin16TDUR.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+#MINTEMP
+ggplot(data=ddaf_melt, aes(x=week,y=avpred, color=fit))+
+  ylab("length (mm)")+xlab("")+
+  geom_line(data=subset(ddaf_melt, fit=="fit.mintemp_high"|fit=="fit.mintemp_low"|fit=="fit.mintemp_mean"),aes(x=week,y=avpred))+
+  geom_ribbon(data=subset(ddaf_melt, fit=="fit.mintemp_high"|fit=="fit.mintemp_low"|fit=="fit.mintemp_mean"),
+              aes(x=week,ymin=avpred-2*sepred,ymax=avpred+2*sepred,fill=fit),alpha=0.2,linetype="blank")+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
+  facet_wrap(~site)+
+  theme_few()
+#ggsave("growmargin16MINTEMP.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+#MAXDO
+ggplot(data=ddaf_melt, aes(x=week,y=avpred, color=fit))+
+  ylab("length (mm)")+xlab("")+
+  geom_line(data=subset(ddaf_melt, fit=="fit.maxdo_high"|fit=="fit.maxdo_low"|fit=="fit.maxdo_mean"),aes(x=week,y=avpred))+
+  geom_ribbon(data=subset(ddaf_melt, fit=="fit.maxdo_high"|fit=="fit.maxdo_low"|fit=="fit.maxdo_mean"),
+              aes(x=week,ymin=avpred-2*sepred,ymax=avpred+2*sepred,fill=fit),alpha=0.2,linetype="blank")+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
+  facet_wrap(~site)+
+  theme_few()
+#ggsave("growmargin16MAXDO.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
 
 ############# margin plots for 2017 ##########
 
@@ -577,24 +531,14 @@ newdf <-as.data.frame(cbind(newdf,fit.meantemp_low))
 #now we want to make basically a dataframe of all the fits and the actual average length, this will help with plots later. 
 allfits17 <- dplyr::select(newdf,-mean.temp,-av_length)
 allfits17 <-full_join(grow17,allfits17, by=c("cage","site","depth","week"))
-allfits17 <-dplyr::select(allfits17, -biom,-min.do,-max.do,-mean.do,-sd.do,-min.temp,-max.temp,-mean.temp,-sd.T,-do.dur,-temp.dur,-mean.sal,-sd.sal,-ssat,-residuals,-SD,-survivors, -X)
+allfits17 <-dplyr::select(allfits17, -biom,-min.do,-max.do,-mean.do,-sd.do,-min.temp,-max.temp,-mean.temp,-sd.T,-do.dur,-temp.dur,-mean.sal,-sd.sal,-ssat,-SD,-survivors, -X)
 
 #melt version
-af_melt17 <-gather(allfits17,"fit", "pred_value", 8:11)
+af_melt17 <-pivot_longer(allfits17,cols=c("fit.meantemp_high","fit.meantemp_mean","fit.meantemp_low"), names_to = "fit")
 af_melt17$fit <-as.factor(af_melt17$fit)
 
-#just another way to produce the original model over data, but quickly. 
-allfits17 %>% 
-  ggplot(aes(x=week,y=av_length, color=cage))+
-  geom_point(alpha=1/2)+
-  ylab("Average length (mm)")+
-  geom_line(aes(y = predicted),linetype="dashed") + #predicted from original model
-  #geom_line(aes(y = av_length)) + #actual model
-  facet_wrap(~site)+
-  theme_classic()
-
 #You could create a mean value for ALL the cages in a site. 
-ddaf_melt17 <-ddply(af_melt17,week~fit,summarise,avpred=mean(pred_value),sepred = std.error(pred_value))
+ddaf_melt17 <-ddply(af_melt17,week~fit,summarise,avpred=mean(value),sepred = std.error(value))
 
 ggplot(data=ddaf_melt17, aes(x=week,y=avpred, color=fit))+
   #scale_color_manual(values=wes_palette(n=3, name="Darjeeling1"))+
@@ -603,3 +547,14 @@ ggplot(data=ddaf_melt17, aes(x=week,y=avpred, color=fit))+
   geom_linerange(data=subset(ddaf_melt17, fit=="fit.meantemp_high"|fit=="fit.meantemp_low"|fit=="fit.meantemp_mean"),aes(x=week,ymin=avpred-2*sepred,ymax=avpred+2*sepred),alpha=0.3,)+
   #facet_grid(depth~site)+
   theme_classic()
+
+#MEANTEMP17
+ggplot(data=ddaf_melt17, aes(x=week,y=avpred, color=fit))+
+  ylab("length (mm)")+xlab("")+
+  geom_line(data=subset(ddaf_melt17, fit=="fit.meantemp_high"|fit=="fit.meantemp_low"|fit=="fit.meantemp_mean"),aes(x=week,y=avpred,color=fit))+
+  geom_ribbon(data=subset(ddaf_melt17, fit=="fit.meantemp_high"|fit=="fit.meantemp_low"|fit=="fit.meantemp_mean"),
+              aes(x=week,ymin=avpred-2*sepred,ymax=avpred+2*sepred,fill=fit),alpha=0.2,linetype="blank")+
+  scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
+  theme_few()
+#ggsave("growmargin17MEANTEMP.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
