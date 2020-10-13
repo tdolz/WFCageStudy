@@ -26,7 +26,7 @@ svwk2017 <-read.csv("weeklysummarydata_2017.csv", header=TRUE) # the weekly summ
 cagetotals17 <-read.csv("cagetotals_17fixed.csv", header=TRUE)
 cagetotals16 <-read.csv("cagetotals_16.csv", header=TRUE)
 
-#2016 best models
+#2016 best models - dcor16 is best
 dcor16 <-coxph(Surv(start, end, event2)~ site + min.temp + cluster(cage),na.action="na.fail", data=svwk2016)
 cox16.1 <-coxph(Surv(start, end, event2)~ site*mean.sal + mean.temp + cluster(cage),na.action="na.fail", data=svwk2016)
 dcor16.2 <-coxph(Surv(start, end, event2)~ site + max.temp + cluster(cage),na.action="na.fail", data=svwk2016)
@@ -135,28 +135,32 @@ summary(fitnew2) # just printing the summary is the risk table
 
 
 #Now these are the prediction graphs, we're looking at what would happen if minimum temperature was really high vs. really low. 
-min.mintemp <-min(svwk2016$min.temp) #12.31
-max.mintemp <-max(svwk2016$min.temp) #23.93 that is a high minimum temperature! 
+min.mintemp.2016e <-19.6
+min.mintemp.2016l <-19.6
+meantemp17.early <-17.6
+meantemp17.late <-19.0
+meansal17.early <-31.6
+meansal17.late <-32
+tempdur17.early <-
+tempdur17.late <-
+
 
 #marginal effects with site.
-fithigh <-survfit(dcor16, newdata=data.frame(site=c("CP","MD","RS"),min.temp=rep(max.mintemp),3), data=svwk2016)
-fitlow <-survfit(dcor16, newdata=data.frame(site=c("CP","MD","RS"),min.temp=rep(min.mintemp),3), data=svwk2016)
-
-#try without separating out site. 
-#marginal effects with site.
-fithigh <-survfit(dcor16, newdata=data.frame(site=c("CP","MD","RS"),min.temp=rep(max.mintemp),3), data=svwk2016)
-fitlow <-survfit(dcor16, newdata=data.frame(site=c("CP","MD","RS"),min.temp=rep(min.mintemp),3), data=svwk2016)
+fitearly16 <-survfit(dcor16, newdata=data.frame(site=c("CP"),min.temp=rep(min.mintemp.2016e),1), data=svwk2016)
+fitlate16 <-survfit(dcor16, newdata=data.frame(site=c("CP"),min.temp=rep(min.mintemp.2016l),1), data=svwk2016)
+fitearly17 <-survfit(cox_prev17, newdata=data.frame(depth=c("deep","shallow"),mean.temp=rep(meantemp17.early),mean.sal=rep(meansal17.early),temp.dur=rep(tempdur17.early),2), data=svwk2017)
+fitlate17 <-survfit(cox_prev17, newdata=data.frame(depth=c("deep","shallow"),mean.temp=rep(min.meantemp17),mean.sal=rep(meansal17.late),temp.dur=rep(tempdur17.late),2), data=svwk2017)
 
 
 #mycols <- c("#33a02c","#e31a1c","#1f78b4","#b2df8a","#fb9a99","#a6cee3")
 mycols <- c("#8c510a", "#d8b365","#f6e8c3","#c7eae5","#5ab4ac","#01665e")
-fit <- list(Hightemp = fithigh, Lowtemp = fitlow)
+fit <- list(earlytemp16 = fitearly16, latetemp16 = fitlate16, )
 ggsurvplot(fit, data = svwk2016, combine = TRUE, # Combine curves
            risk.table = FALSE,                  # Add risk table
            conf.int = FALSE,                   # Add confidence interval
            conf.int.style = "ribbon",            # CI style, use "step" or "ribbon"
            censor = FALSE,                     # Remove censor points
-           legend.labs=c("CP-high","MD-high","RS-high", "CP-low", "MD-low", "RS-low"),
+           legend.labs=c("2016_early","2016_late"),
            tables.theme = theme_cleantable(),  # Clean risk table
            xlim=c(2,11),
            break.x.by=1,
