@@ -333,8 +333,20 @@ is.nan.data.frame <- function(x)
 #2017 
 #cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted), fittedup =fitted + se.fitted, fittedlo = fitted-se.fitted) %>% mutate(inst = 1-exp((1-survprob)/7), spup=exp(-fittedup),splo=exp(-fittedlo))
 cb17 <-prediction(cox_prev17, type="expected", calculate_se = TRUE)
-cb17[is.nan(cb17)] <-0
-cb17 <-filter(cb17, fitted != 0 & se.fitted != 0)
+
+#resample to get rid of NANs
+for(i in 1:length(cb17$se.fitted)){
+  if(is.nan.data.frame(cb17$se.fitted[i])){
+    cb17$se.fitted[i]<-sample(na.omit(cb17$se.fitted),size=1,replace=TRUE)}
+  if(cb17$se.fitted[i] == 0){
+    cb17$se.fitted[i]<-sample(na.omit(cb17$se.fitted),size=1,replace=TRUE)}
+  if(cb17$fitted[i]== 0){
+    cb17$fitted[i]<-sample(na.omit(cb17$fitted),size=1,replace=TRUE)}
+  }
+cb17$se.fitted <- as.numeric(as.character(cb17$se.fitted))
+cb17$fitted <- as.numeric(as.character(cb17$fitted))
+
+cagetotals17 <-read.csv("cagetotals_17fixed.csv", header=TRUE)
 cb17 <- mutate(cb17, survprob=exp(-fitted),u=fitted+se.fitted, l=fitted-se.fitted)%>%
   mutate(upper.se=exp(-u), lower.se=exp(-l)) %>% 
   mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors, ubar =survprob +u, lbar=survprob-l)
@@ -354,8 +366,8 @@ ggplot(aes(x=week))+
  # geom_point(aes(y=surv.per/coeff),color="black", alpha=0.5, shape =1)+
   #geom_smooth(aes(y=surv.per/coeff, method="loess"),color="blue",linetype="dashed", size=0.5, se=FALSE)+
   geom_line(aes(y=survprob), color="steelblue3")+
-  scale_y_continuous(limits=c(0,1),name = " ",)+
-  geom_ribbon(aes(ymin=lower.se, ymax=upper.se), fill="steelblue3",alpha=0.4)+
+  #scale_y_continuous(limits=c(0,1),name = " ",)+
+  geom_ribbon(aes(ymin=upper.se, ymax=lower.se), fill="steelblue3",alpha=0.4)+
     #sec.axis=sec_axis(trans=~.*1, name="percent survived"))+
     #+theme_bw() + ylim(0,1.0)+
   #scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"), name="")+
