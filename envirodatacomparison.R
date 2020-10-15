@@ -10,6 +10,7 @@ library("tidyr")
 library("dplyr")
 library("cowplot")
 library("agricolae")
+library("forcats")
 
 #keeping everything in this folder
 setwd("/Users//tdolan/Documents//R-Github/WFCageStudy")
@@ -150,6 +151,20 @@ p6
 #ggsave('temp_violins6.png', width = 7, height = 7, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
+#regular boxplot instead. 
+p6 <- ggplot(six,aes(x=fct_rev(station),y=temp, fill = site, colour = site))+
+  geom_boxplot(aes(x = station, y = temp),
+               outlier.shape=NA, alpha = 1, width = .3, colour = "BLACK") + coord_flip()+
+  ylab('Temperature C')+xlab('station')+theme_cowplot()+guides(fill = FALSE, colour = FALSE) +
+  scale_colour_brewer(palette = "Greys")+
+  scale_fill_brewer(palette = "Greys")+
+  theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
+p6
+ggsave('temp_boxplot6.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+
 #2017
 p6 <- ggplot(sev,aes(x=station,y=temp, fill = site, colour = site))+
   geom_flat_violin(position = position_nudge(x = .25, y = 0),adjust
@@ -164,6 +179,19 @@ p6 <- ggplot(sev,aes(x=station,y=temp, fill = site, colour = site))+
 #ggtitle("Temperature (C)")
 p6
 #ggsave('temp_violins7.png', width = 7, height = 7, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+#regular boxplot
+p6 <- ggplot(sev,aes(x=fct_rev(station),y=temp, fill = site, colour = site))+
+  geom_boxplot(aes(x = station, y = temp),
+               outlier.shape=NA, alpha = 1, width = .3, colour = "BLACK") + coord_flip()+
+  ylab('Temperature C')+xlab('station')+theme_cowplot()+guides(fill = FALSE, colour = FALSE) +
+  scale_colour_brewer(palette = "Greys")+
+  scale_fill_brewer(palette = "Greys")+
+  theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
+p6
+ggsave('temp_boxplot7.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
@@ -226,6 +254,20 @@ p6
 #ggsave('DO_violins6.png', width = 7, height = 7, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
+p6 <- ggplot(six,aes(x=fct_rev(station),y=DO, fill = site, colour = site))+
+  geom_boxplot(aes(x = station, y = DO),
+               outlier.shape=NA, alpha = 1, width = .3, colour = "BLACK") + coord_flip()+
+  ylab('Dissolved Oxygen (mg/L)')+xlab('station')+theme_cowplot()+guides(fill = FALSE, colour = FALSE) +
+  scale_colour_brewer(palette = "Greys")+
+  scale_fill_brewer(palette = "Greys")+
+  theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
+p6
+ggsave('DO_boxplot6.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+
+
 #2017
 p6 <- ggplot(sev,aes(x=station,y=DO, fill = site, colour = site))+
   geom_flat_violin(position = position_nudge(x = .25, y = 0),adjust
@@ -240,6 +282,18 @@ p6 <- ggplot(sev,aes(x=station,y=DO, fill = site, colour = site))+
 #ggtitle("Temperature (C)")
 p6
 #ggsave('DO_violins7.png', width = 7, height = 7, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+p6 <- ggplot(sev,aes(x=fct_rev(station),y=DO, fill = site, colour = site))+
+  geom_boxplot(aes(x = station, y = DO),
+               outlier.shape=NA, alpha = 1, width = .3, colour = "BLACK") + coord_flip()+
+  ylab('Dissolved Oxygen (mg/L)')+xlab('station')+theme_cowplot()+guides(fill = FALSE, colour = FALSE) +
+  scale_colour_brewer(palette = "Greys")+
+  scale_fill_brewer(palette = "Greys")+
+  theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
+p6
+ggsave('DO_boxplot7.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
@@ -301,6 +355,20 @@ p6
 #ggsave('sal_violins6.png', width = 7, height = 7, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
+p6 <- ggplot(six,aes(x=fct_rev(station),y=sal, fill = site, colour = site))+
+  geom_boxplot(aes(x = station, y = sal),
+               outlier.shape=NA, alpha = 1, width = .3, colour = "BLACK") + coord_flip()+
+  ylab('Salinity (ppt)')+xlab('station')+theme_cowplot()+guides(fill = FALSE, colour = FALSE) +
+  scale_colour_brewer(palette = "Greys")+
+  scale_fill_brewer(palette = "Greys")+
+  theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
+p6
+ggsave('sal_boxplot6.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
+
+
 #2017
 p6 <- ggplot(sev,aes(x=station,y=sal, fill = site, colour = site))+
   geom_flat_violin(position = position_nudge(x = .25, y = 0),adjust
@@ -316,6 +384,19 @@ p6 <- ggplot(sev,aes(x=station,y=sal, fill = site, colour = site))+
 p6
 #ggsave('sal_violins7.png', width = 7, height = 7, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
+
+p6 <- ggplot(sev,aes(x=fct_rev(station),y=sal, fill = site, colour = site))+
+  geom_boxplot(aes(x = station, y = sal),
+               outlier.shape=NA, alpha = 1, width = .3, colour = "BLACK") + coord_flip()+
+  ylab('Salinity (ppt)')+xlab('station')+theme_cowplot()+guides(fill = FALSE, colour = FALSE) +
+  scale_colour_brewer(palette = "Greys")+
+  scale_fill_brewer(palette = "Greys")+
+  theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
+p6
+ggsave('sal_boxplot7.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#dev.off()
+
 
 
 #sal 2016 anova. 
