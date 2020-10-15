@@ -340,15 +340,17 @@ cb17 %>%
   filter(!is.nan(se.fitted))%>%
   filter(week > 0)%>%
 ggplot(aes(x=week))+
- geom_line(aes(y=survprob), color="red")+
-  geom_point(aes(y=surv.per/coeff),color="blue", alpha=0.02)+
-  geom_smooth(aes(y=surv.per/coeff, method="loess"),color="blue",linetype="dashed", size=0.5, se=FALSE)+
+  #geom_point(aes(y=surv.per),color="black", alpha=0.2, shape =1)+
+  geom_jitter(aes(y=surv.per),width = 0.8, height = 0.05, alpha=0.8, shape =19, size=1, color="dark gray")+
+ # geom_point(aes(y=surv.per/coeff),color="black", alpha=0.5, shape =1)+
+  #geom_smooth(aes(y=surv.per/coeff, method="loess"),color="blue",linetype="dashed", size=0.5, se=FALSE)+
+  geom_line(aes(y=survprob), color="steelblue3")+
   scale_y_continuous(limits=c(0,1),
     name = " ",
   )+
     #sec.axis=sec_axis(trans=~.*1, name="percent survived"))+
     #+theme_bw() + ylim(0,1.0)+
-  scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"), name="")+
+  #scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"), name="")+
   facet_grid(site~depth)+
   #theme(axis.line.y.right = element_line(color = "blue"), 
   #       axis.ticks.y.right = element_line(color = "blue"),
@@ -356,12 +358,14 @@ ggplot(aes(x=week))+
    #     axis.ticks.y.left = element_line(color = "red"),
    #     panel.background = element_rect(fill = "white", colour = "white"))
   theme_few()
-#ggsave("survpred17.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#ggsave("survpred17jitter.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
 #2016
-cb16 <-prediction(dcor16, type="expected") %>% mutate(survprob=exp(-fitted)) %>% mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors)
+cb16 <-prediction(dcor16, type="expected", calculate_se = TRUE) %>% 
+  mutate(survprob=exp(-fitted), upper.se=exp(-(fitted+se)), lower.se=exp(-(fitted-se)) %>% 
+  mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors))
 cagedeaths16 <-dplyr::select(cagetotals16, Site, depth, Week, CageID, deaths) %>% dplyr::rename(site=Site,cage=CageID, week=Week)
 cb16 <-left_join(cb16, cagedeaths16, by=c("site","depth","week","cage"))
 cb16 <-mutate(cb16, death.per=deaths/survivors, surv.per=(survivors-deaths)/survivors)
@@ -372,18 +376,20 @@ cb16 %>%
   filter(!is.nan(se.fitted))%>%
   filter(week > 0)%>%
   ggplot(aes(x=week))+
-  geom_line(aes(y=survprob), color="red")+
-  geom_point(aes(y=surv.per/coeff),color="blue", alpha=0.02)+
-  geom_smooth(aes(y=surv.per/coeff, method="loess"),color="blue",linetype="dashed", size=0.5, se=FALSE)+
+  geom_jitter(aes(y=surv.per),width = 0.8, height = 0.05, alpha=0.8, shape =19, size=1, color="dark gray")+
+ # geom_point(aes(y=surv.per/coeff),color="blue", alpha=0.02)+
+ # geom_smooth(aes(y=surv.per/coeff, method="loess"),color="blue",linetype="dashed", size=0.5, se=FALSE)+
+  geom_line(aes(y=survprob), color="steelblue3")+
+  geom_ribbon(aes(ymin=))
   scale_y_continuous(limits=c(0,1),
                      name = " ",
   )+
   #sec.axis=sec_axis(trans=~.*1, name="percent survived"))+
   #+theme_bw() + ylim(0,1.0)+
-  scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"), name="")+
+  #scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"), name="")+
   facet_grid(site~depth)+
   theme_few()
-#ggsave("survpred16.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#ggsave("survpred16_jitter.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
