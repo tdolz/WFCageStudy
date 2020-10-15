@@ -327,12 +327,21 @@ ggsurvplot(fit, data = svwk2017, combine = TRUE, # Combine curves
 
 ###################
 #### Survival probability vs. time ####
+is.nan.data.frame <- function(x)
+  do.call(cbind, lapply(x, is.nan))
+
 #2017 
 #cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted), fittedup =fitted + se.fitted, fittedlo = fitted-se.fitted) %>% mutate(inst = 1-exp((1-survprob)/7), spup=exp(-fittedup),splo=exp(-fittedlo))
-cb17 <-prediction(cox_prev17, type="expected") %>% mutate(survprob=exp(-fitted)) %>% mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors)
-cagedeaths17 <-dplyr::select(cagetotals17, Site, depth, Week, CageID, deaths) %>% dplyr::rename(site=Site,cage=CageID, week=Week)
-cb17 <-left_join(cb17, cagedeaths17, by=c("site","depth","week","cage"))
+cb17 <-prediction(cox_prev17, type="expected", calculate_se = TRUE)
+cb17[is.nan(cb17)] <-0
+cb17 <-filter(cb17, fitted != 0 & se.fitted != 0)
+cb17 <- mutate(cb17, survprob=exp(-fitted),u=fitted+se.fitted, l=fitted-se.fitted)%>%
+  mutate(upper.se=exp(-u), lower.se=exp(-l)) %>% 
+  mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors, ubar =survprob +u, lbar=survprob-l)
+cagedeaths17 <-dplyr::select(cagetotals16, Site, depth, Week, CageID, deaths) %>% dplyr::rename(site=Site,cage=CageID, week=Week)
+cb17 <-left_join(cb17, cagedeaths16, by=c("site","depth","week","cage"))
 cb17 <-mutate(cb17, death.per=deaths/survivors, surv.per=(survivors-deaths)/survivors)
+
 
 
 coeff <-1
@@ -345,9 +354,8 @@ ggplot(aes(x=week))+
  # geom_point(aes(y=surv.per/coeff),color="black", alpha=0.5, shape =1)+
   #geom_smooth(aes(y=surv.per/coeff, method="loess"),color="blue",linetype="dashed", size=0.5, se=FALSE)+
   geom_line(aes(y=survprob), color="steelblue3")+
-  scale_y_continuous(limits=c(0,1),
-    name = " ",
-  )+
+  scale_y_continuous(limits=c(0,1),name = " ",)+
+  geom_ribbon(aes(ymin=lower.se, ymax=upper.se), fill="steelblue3",alpha=0.4)+
     #sec.axis=sec_axis(trans=~.*1, name="percent survived"))+
     #+theme_bw() + ylim(0,1.0)+
   #scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"), name="")+
@@ -364,8 +372,9 @@ ggplot(aes(x=week))+
 
 #2016
 cb16 <-prediction(dcor16, type="expected", calculate_se = TRUE) %>% 
-  mutate(survprob=exp(-fitted), upper.se=exp(-(fitted+se)), lower.se=exp(-(fitted-se)) %>% 
-  mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors))
+  mutate(survprob=exp(-fitted),u=fitted+se.fitted, l=fitted-se.fitted)%>%
+  mutate(upper.se=exp(-u), lower.se=exp(-l)) %>% 
+  mutate(inst = 1-exp((1-survprob)/7), nd=10-survivors, ubar =survprob +u, lbar=survprob-l)
 cagedeaths16 <-dplyr::select(cagetotals16, Site, depth, Week, CageID, deaths) %>% dplyr::rename(site=Site,cage=CageID, week=Week)
 cb16 <-left_join(cb16, cagedeaths16, by=c("site","depth","week","cage"))
 cb16 <-mutate(cb16, death.per=deaths/survivors, surv.per=(survivors-deaths)/survivors)
@@ -380,10 +389,8 @@ cb16 %>%
  # geom_point(aes(y=surv.per/coeff),color="blue", alpha=0.02)+
  # geom_smooth(aes(y=surv.per/coeff, method="loess"),color="blue",linetype="dashed", size=0.5, se=FALSE)+
   geom_line(aes(y=survprob), color="steelblue3")+
-  geom_ribbon(aes(ymin=))
-  scale_y_continuous(limits=c(0,1),
-                     name = " ",
-  )+
+  geom_ribbon(aes(ymin=lower.se, ymax=upper.se), fill="steelblue3",alpha=0.4)+
+  scale_y_continuous(limits=c(0,1),name = " ")+
   #sec.axis=sec_axis(trans=~.*1, name="percent survived"))+
   #+theme_bw() + ylim(0,1.0)+
   #scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"), name="")+
