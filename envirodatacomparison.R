@@ -24,6 +24,9 @@ six <-mutate(six, Year="2016")
 vert <- bind_rows(six,sev)
 
 
+
+
+
 #the geom_flat violin function#
 ##### The geom flat violin function ####
 
@@ -161,7 +164,7 @@ p6 <- ggplot(six,aes(x=fct_rev(station),y=temp, fill = site, colour = site))+
   theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
         panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
 p6
-ggsave('temp_boxplot6.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#ggsave('temp_boxplot6.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
@@ -191,7 +194,7 @@ p6 <- ggplot(sev,aes(x=fct_rev(station),y=temp, fill = site, colour = site))+
   theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
         panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
 p6
-ggsave('temp_boxplot7.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#ggsave('temp_boxplot7.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
@@ -263,7 +266,7 @@ p6 <- ggplot(six,aes(x=fct_rev(station),y=DO, fill = site, colour = site))+
   theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
         panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
 p6
-ggsave('DO_boxplot6.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#ggsave('DO_boxplot6.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
@@ -293,7 +296,7 @@ p6 <- ggplot(sev,aes(x=fct_rev(station),y=DO, fill = site, colour = site))+
   theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
         panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
 p6
-ggsave('DO_boxplot7.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#ggsave('DO_boxplot7.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
@@ -364,7 +367,7 @@ p6 <- ggplot(six,aes(x=fct_rev(station),y=sal, fill = site, colour = site))+
   theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
         panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
 p6
-ggsave('sal_boxplot6.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#ggsave('sal_boxplot6.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
@@ -394,7 +397,7 @@ p6 <- ggplot(sev,aes(x=fct_rev(station),y=sal, fill = site, colour = site))+
   theme(axis.text = element_text(size = 12),axis.title = element_text(size = 12),panel.background = element_rect(fill = 'white', colour = 'black'),
         panel.grid.major = element_line(colour = "white"))+guides(fill = FALSE, colour = FALSE) 
 p6
-ggsave('sal_boxplot7.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+#ggsave('sal_boxplot7.png', width = 7, height = 4, path = "/Users//tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
@@ -436,3 +439,6 @@ df<-df.residual(anovaT17)
 MSerror<-deviance(anovaT17)/df
 comparison <- HSD.test(anovaT17,c("site","depth"),MSerror=MSerror, unbalanced=TRUE,alpha=0.05/15, group=TRUE)
 comparison
+
+
+#Correlation 

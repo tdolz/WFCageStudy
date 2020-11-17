@@ -96,26 +96,33 @@ summary(cp17mod)
 cp16mod<-lm(log(catch)~edays,data = cp16)
 summary(cp16mod)
 
+#cagenumber palette
+sandycolors <-c("#a6611a", "#dfc27d","#80cdc1","#018571")
+cagenumcols <-c("#E69F00","#56B4E9","#009E73","#CC79A7")
+dark2 <- c("#1b9e77","#d95f02", "#7570b3", "#e7298a")
 ###### Visualization no model, just averages ######
 svwk2016 <-mutate(svwk2016, cagenum = str_sub(cage,-1,-1))
 ##number of survivors ###
-ggplot(data=svwk2016,aes(x=week,y=survivors, linetype = cagenum))+
+ggplot(data=svwk2016,aes(x=week,y=survivors, color = cagenum))+
   #geom_point(alpha=1/10)+
   geom_line() +
-  scale_color_grey()+
+  scale_color_manual(values=sandycolors)+
+  #scale_color_grey()+
   #ylim(0,10)+ 
   scale_y_discrete(limits=c(0,5,10))+
   scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
   facet_grid(site~depth)+
   theme_few()
 
+
 #2017
 svwk2017 <-mutate(svwk2017, cagenum = str_sub(cage,-1,-1))
 ##number of survivors ###
-ggplot(data=svwk2017,aes(x=week,y=survivors, linetype = cagenum))+
+ggplot(data=svwk2017,aes(x=week,y=survivors, color = cagenum))+
   #geom_point(alpha=1/10)+
   geom_line() +
-  scale_color_grey()+
+  #scale_color_grey()+
+  scale_color_manual(values=sandycolors)+
   #ylim(0,10)+ 
   scale_y_discrete(limits=c(0,5,10))+
   scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
@@ -188,11 +195,12 @@ drabcolors <-c("#969696", "#a6bddb","#3690c0","#016450")
 boldcolors <-c("#ca0020","blue","#404040","grey")
 sandycolors <-c("#a6611a", "#dfc27d","#80cdc1","#018571")
 
+
 #New Formulation:: 2016
 grow16 <-mutate(grow16, cagenum = str_sub(cage,-1,-1))
 ggplot(data=svwk2016,aes(x=week,y=fishlength, color =cagenum))+
   geom_rug(alpha = 1/2, position = "jitter", sides="b")+
-  scale_color_manual(values=drabcolors)+
+  scale_color_manual(values=sandycolors)+
   ylab("length (mm)")+xlab("")+
   ylim(40,110)+
   scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
@@ -201,24 +209,24 @@ ggplot(data=svwk2016,aes(x=week,y=fishlength, color =cagenum))+
   geom_line(data = cbind(grow16, pred = predict(pwin16, level=1)), aes(y = pred),linetype="dashed") + #predicted average
   facet_grid(site~depth)+
   theme_few()
-#ggsave("actualgrowth16wmodel.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+ggsave("actualgrowth16wmodel.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 #New Formulation:: 2017
 grow17 <-mutate(grow17, cagenum = str_sub(cage,-1,-1))
 ggplot(data=svwk2017,aes(x=week,y=fishlength, color =cagenum))+
   geom_rug(alpha = 1/2, position = "jitter", sides="b")+
-  scale_color_manual(values=drabcolors)+
+  scale_color_manual(values=sandycolors)+
   ylab("length (mm)")+xlab("")+
   ylim(40,110)+
   scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
-  geom_point(alpha=1/3, shape=1)+
-  #geom_line(aes(y=av_length), linetype="dashed", data=grow17) + #actual average
+  #geom_point(alpha=1/3, shape=1)+
+  geom_line(aes(y=av_length), linetype="dashed", data=grow17) + #actual average
   ylab("Average length (mm)")+
   geom_line(data = cbind(grow17, pred = predict(d73A, level=1)), aes(y = pred),linetype="solid") + #predicted average
   facet_grid(site~depth)+
   theme_few()
-#ggsave("actualgrowth17wmodel.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+ggsave("actualgrowth17wmodel.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 #Previous formulation::: over fishlength & cage average 2017

@@ -16,6 +16,7 @@ library("ggthemes")
 library("MuMIn")
 library("corrplot")
 library("MASS")
+library('forcats')
 
 #setwd("/Users//tdolan/Documents//WIP research/Caging paper/data/heather meeting/caging_rproj")
 setwd("/Users/tdolan/Documents/R-Github/WFCageStudy")
@@ -46,9 +47,6 @@ win17 <-model.sel(cox_prev17,dwincox17,dwincox17.2)
 csv <-dplyr::select(svwk2016,min.do,max.do,mean.do,min.temp,max.temp,mean.temp,temp.dur,do.dur,mean.sal,ssat)
 library("corrplot")
 M <-cor(csv)  # produces the correlation matrix. 
-#These colnames are wrong depending on what year you use, so fix/pay attention
-#colnames(M) <- c("min DO", "max DO", "min temp", "max temp", "mean temp", "minutes :> 27C","minutes :< 2.0 mg/L","mean salinity", "minutes :> 115:% DO" )
-#rownames(M) <- c("min DO", "max DO", "min temp", "max temp", "mean temp", "minutes :> 27C","minutes :< 2.0 mg/L","mean salinity", "minutes :> 115:% DO" )
 corrplot.mixed(M,method="circle", lower.col="black", number.cex=.7)
 res1 <- cor.mtest(csv, conf.level = .95)
 p.mat = res1$p
