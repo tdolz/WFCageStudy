@@ -44,7 +44,10 @@ win17 <-model.sel(cox_prev17,dwincox17,dwincox17.2)
 
 ###correlation plot ####
 #change year as needed. 
-csv <-dplyr::select(svwk2016,min.do,max.do,mean.do,min.temp,max.temp,mean.temp,temp.dur,do.dur,mean.sal,ssat)
+csv <-dplyr::select(svwk2017,min.do,max.do,mean.do,min.temp,max.temp,mean.temp,temp.dur,do.dur,mean.sal,ssat)
+csv <- csv[, c("min.do","mean.do","max.do","min.temp","mean.temp","max.temp","temp.dur","do.dur","mean.sal","ssat")]
+csv <-rename(csv,"minimum DO"="min.do","mean DO"="mean.do","maximum DO"="max.do","minimum temperature"="min.temp","mean temperature"="mean.temp","maxiumum temperature"="max.temp","minutes > 27C"="temp.dur","minutes < 2.0 mg/L"="do.dur","mean salinity"="mean.sal","minutes supersaturated DO"="ssat")
+
 library("corrplot")
 M <-cor(csv)  # produces the correlation matrix. 
 corrplot.mixed(M,method="circle", lower.col="black", number.cex=.7)
@@ -53,7 +56,7 @@ p.mat = res1$p
 
 col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
 corrplot(M, method = "color", col = col(200),
-         type = "upper", order = "hclust", number.cex = .7,
+         type = "upper", number.cex = .7,   #took out order="hclust" option. 
          addCoef.col = "black", # Add coefficient of correlation
          tl.col = "black", tl.srt = 90, # Text label color and rotation
          # Combine with significance
@@ -123,11 +126,28 @@ ggsurvplot(fitnew, conf.int = TRUE, palette = "Dark2",
 #the effects for dcor16 are site, min.temp
 av.mintemp <- mean(svwk2016$min.temp)
 
+#new way because of error
+#https://github.com/kassambara/survminer/issues/252
+data(svwk2016)
+my_variables <- c("CP","MD","RS")
+my_formulas <- list()
+for(variable in my_variables){
+  my_formulas[[variable]] <- paste0("Surv(time, status) ~ ", variable) %>%
+    as.formula()
+}
+my_formulas
+my_fits <- surv_fit(my_formulas, data = svwk2016)
+ggsurvs <- ggsurvplot(my_fits, risk.table = TRUE, pval = TRUE)
+ggsurvs
+
+
 # looking at marginal effect of site, holding minimum temperature to it's average for the year. 
 #average minimum temperature across whole year is 18.84001
-fitnew2 <-survfit(dcor16, newdata=data.frame(site=c("CP","MD","RS"),min.temp=rep(av.mintemp),3), data=svwk2016)
+fitnew2 <-surv_fit(dcor16, newdata=data.frame(site=c("CP","MD","RS"),min.temp=rep(av.mintemp),3), data=svwk2016)
 ggsurvplot(fitnew2, conf.int = TRUE, palette = "Dark2", 
-           censor = FALSE, fun="pct", size=1, surv.median.line = "hv", risk.table=FALSE,  legend.labs=c("CP","MD","RS"), xlim=c(2,11), break.x.by=1)
+           censor = FALSE, fun="pct", size=1, surv.median.line = "hv", risk.table=FALSE,  
+           #legend.labs=c("CP","MD","RS"), 
+           xlim=c(2,11), break.x.by=1)
 summary(fitnew2) # just printing the summary is the risk table
 # The pval comes from the log rank test, so perform the log rank test to extrac the pval. The logrank test for the fitb model is p =3e-12.  
 

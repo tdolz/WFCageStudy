@@ -328,7 +328,9 @@ p2 <- ggplot(vargrowth) +
   scale_x_discrete(limits=c(0,2,4,6,8,10))+
   geom_smooth(aes(x=surv,y=deltalength), method="lm") +
   xlab("number of survivors")+ylab("weekly growth (mm)")+
-  theme_few()
+  #theme_few()
+  theme(axis.text = element_text(size = 16),axis.title = element_text(size = 16),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))
 p2
 #ggsave("grow16growthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
@@ -339,9 +341,10 @@ p2 <- ggplot(vargrowth) +
   scale_x_discrete(limits=c(0,2,4,6,8,10))+
   geom_smooth(aes(x=surv,y=varlength), method="lm") +
   xlab("number of survivors")+ylab("standard deviation of length")+
-  theme_few()
+  theme(axis.text = element_text(size = 16),axis.title = element_text(size = 16),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))
 p2
-#ggsave("grow16SDgrowthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+ggsave("grow16SDgrowthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 #find initial length and then get overall slope for each cage. 
@@ -361,9 +364,10 @@ p2 <- ggplot(slopes) +
   #scale_x_discrete(limits=c(0,2,4,6,8,10))+
   geom_smooth(aes(x=initlenght,y=growth), method="lm") +
   xlab("initial length (mm)")+ylab("average growth (mm/day)")+
-  theme_few()
+  theme(axis.text = element_text(size = 16),axis.title = element_text(size = 16),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))
 p2
-#ggsave("initiallengthvsgrowth16.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+ggsave("initiallengthvsgrowth16.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 ### 2017 ##
@@ -377,9 +381,10 @@ p2 <- ggplot(vargrowth) +
   scale_x_discrete(limits=c(0,2,4,6,8,10))+
   geom_smooth(aes(x=surv,y=deltalength), method="lm") +
   xlab("number of survivors")+ylab("weekly growth (mm)")+
-  theme_few()
+  theme(axis.text = element_text(size = 16),axis.title = element_text(size = 16),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))
 p2
-#ggsave("grow17growthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+ggsave("grow17growthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 #weekly growth vs. variance in length
@@ -388,9 +393,10 @@ p2 <- ggplot(vargrowth) +
   scale_x_discrete(limits=c(0,2,4,6,8,10))+
   geom_smooth(aes(x=surv,y=varlength), method="lm") +
   xlab("number of survivors")+ylab("standard deviation of length")+
-  theme_few()
+  theme(axis.text = element_text(size = 16),axis.title = element_text(size = 16),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))
 p2
-#ggsave("grow17SDgrowthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+ggsave("grow17SDgrowthvsurvivors.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 
@@ -408,9 +414,10 @@ p2 <- ggplot(slopes) +
   #scale_x_discrete(limits=c(0,2,4,6,8,10))+
   geom_smooth(aes(x=initlenght,y=growth), method="lm") +
   xlab("initial length (mm)")+ylab("average growth (mm/day)")+
-  theme_few()
+  theme(axis.text = element_text(size = 16),axis.title = element_text(size = 16),panel.background = element_rect(fill = 'white', colour = 'black'),
+        panel.grid.major = element_line(colour = "white"))
 p2
-#ggsave("initiallengthvsgrowth.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
+ggsave("initiallengthvsgrowth.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 
 ########## marginal effect of site  #########
