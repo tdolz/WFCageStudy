@@ -109,10 +109,25 @@ ggplot(data=svwk2016,aes(x=week,y=survivors, color = cagenum))+
   scale_color_manual(values=sandycolors)+
   #scale_color_grey()+
   #ylim(0,10)+ 
+  ylab("Survivors")+
+  guides(fill=guide_legend(title="cage"))+
   scale_y_discrete(limits=c(0,5,10))+
   scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
   facet_grid(site~depth)+
-  theme_few()
+  guides(fill=guide_legend(title="cage"))+
+  theme(
+    axis.text.x = element_text(size=12),
+    axis.text.y = element_text(size=12),
+    strip.background =element_rect(fill="transparent"),
+    strip.text = element_text(size=12),
+    legend.position = "none",
+    panel.spacing = unit(3, "mm"),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "transparent",colour = "dark grey"),
+    plot.background = element_rect(fill = NA,colour = "black", size=0.5),
+    panel.border = element_rect(colour="black",fill=NA, size=0.3)
+  )
 
 
 #2017
@@ -124,10 +139,25 @@ ggplot(data=svwk2017,aes(x=week,y=survivors, color = cagenum))+
   #scale_color_grey()+
   scale_color_manual(values=sandycolors)+
   #ylim(0,10)+ 
+  ylab("Survivors")+
+  guides(fill=guide_legend(title="cage"))+
   scale_y_discrete(limits=c(0,5,10))+
   scale_x_discrete(limits=c(3,6,9),labels=c("3"="29-Jun","6"="16-Jul","9"="3-Aug"))+
   facet_grid(site~depth)+
-  theme_few()
+  theme(
+    axis.text.x = element_text(size=12),
+    axis.text.y = element_text(size=12),
+    strip.background =element_rect(fill="transparent"),
+    legend.key = element_rect(colour = NA, fill = NA),
+    strip.text = element_text(size=12),
+    panel.spacing = unit(3, "mm"),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "transparent",colour = "dark grey"),
+    plot.background = element_rect(fill = NA,colour = "black", size=0.5),
+    panel.border = element_rect(colour="black",fill=NA, size=0.3)
+  )
+
 
 ## GROWTH ##
 #rugs for number of fish?
