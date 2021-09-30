@@ -234,11 +234,22 @@ ggplot(data=svwk2016,aes(x=week,y=fishlength, color =cagenum))+
   ylab("length (mm)")+xlab("")+
   ylim(40,110)+
   scale_x_discrete(limits=c(3,6,9),labels=c("3"="30-Jun","6"="20-Jul","9"="10-Aug"))+
-  geom_line(aes(y=av_length), linetype="solid") + #actual average
+  geom_line(aes(y=av_length), linetype="solid", fill="white") + #actual average
   ylab("Average length (mm)")+
-  geom_line(data = cbind(grow16, pred = predict(pwin16, level=1)), aes(y = pred),linetype="dashed") + #predicted average
+  geom_line(data = cbind(grow16, pred = predict(pwin16, level=1)), aes(y = pred),linetype="dashed",fill="white") + #predicted average
   facet_grid(site~depth)+
-  theme_few()
+  #theme_few()
+  theme(legend.direction="horizontal",axis.text.x = element_text(size=9, angle=90),
+        legend.background = element_rect(fill="transparent", size=.5, linetype="dotted"),
+        axis.text.y = element_text(size=7),
+       strip.background =element_rect(fill="transparent"),
+        strip.text = element_text(size=9),
+        panel.spacing = unit(1.5, "mm"),
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        panel.background = element_rect(fill = "transparent",colour = "dark grey"),
+        plot.background = element_rect(fill = NA,colour = "black", size=0.5),
+        panel.border = element_rect(colour="black",fill=NA, size=0.3))
 ggsave("actualgrowth16wmodel.png", path="/Users/tdolan/Documents/WIP research/Caging paper/caging manuscript/cage_figs")
 #dev.off()
 

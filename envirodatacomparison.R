@@ -155,6 +155,8 @@ p6
 #dev.off()
 
 #regular boxplot instead. 
+#modify the station September 30, 2021
+six$station <-fct_recode(six$station, GSS="CPS",GSD="CPD")
 p6 <- ggplot(six,aes(x=fct_rev(station),y=temp, fill = site, colour = site))+
   geom_boxplot(aes(x = station, y = temp),
                outlier.shape=NA, alpha = 1, width = .3, colour = "BLACK") + coord_flip()+
@@ -169,6 +171,7 @@ p6
 
 
 #2017
+sev$station <-fct_recode(sev$station, MD-G="MD",MS-G="MS",ND-G="ND",NS-G="NS",SD-G="SD",SS-G="SS")
 p6 <- ggplot(sev,aes(x=station,y=temp, fill = site, colour = site))+
   geom_flat_violin(position = position_nudge(x = .25, y = 0),adjust
                    =2, trim = FALSE)+
@@ -185,6 +188,7 @@ p6
 #dev.off()
 
 #regular boxplot
+sev$station <-fct_recode(sev$station, `MD-G`="MD",`MS-G`="MS",`ND-G`="ND",`NS-G`="NS",`SD-G`="SD",`SS-G`="SS")
 p6 <- ggplot(sev,aes(x=fct_rev(station),y=temp, fill = site, colour = site))+
   geom_boxplot(aes(x = station, y = temp),
                outlier.shape=NA, alpha = 1, width = .3, colour = "BLACK") + coord_flip()+
